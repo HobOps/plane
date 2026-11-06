@@ -14,7 +14,7 @@ import { Logo } from "@plane/blocks/emoji-icon-picker";
 // components
 // hooks
 import { useProject } from "@/hooks/store/use-project";
-// Hangar extension
+// Fork (see FORK.md): the features list with the time tracking toggle
 import { ProjectFeaturesList } from "@/plane-web/components/projects/settings/features-list";
 
 type Props = {
