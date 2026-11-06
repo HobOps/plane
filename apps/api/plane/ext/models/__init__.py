@@ -3,3 +3,7 @@
 # See the LICENSE file for details.
 
 from .worklog import IssueWorkLog
+
+__all__ = [
+    "IssueWorkLog",
+]
