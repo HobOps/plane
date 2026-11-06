@@ -21,7 +21,7 @@ urlpatterns = [
     path("api/instances/", include("plane.license.urls")),
     path("api/v1/", include("plane.api.urls")),
     path("auth/", include("plane.authentication.urls")),
-    # Fork extensions (see FORK.md) — Django stacks includes on shared prefixes.
+    # Fork (see FORK.md): the fork's API routes. Django tries every "api/" include in order.
     path("api/", include("plane.ext.urls")),
     path("", include("plane.web.urls")),
 ]

@@ -99,7 +99,21 @@ git grep -n "Fork (see FORK.md)"
 
 | File | Why | Pull request |
 | --- | --- | --- |
-| _None yet_ | | |
+| `apps/api/plane/settings/common.py` | Registers the fork's Django app, `plane.ext`. | #2 |
+| `apps/api/plane/urls.py` | Mounts the fork's routes, `plane.ext.urls`, under `api/`. | #2 |
+| `apps/api/plane/bgtasks/issue_activities_task.py` | Worklog activity: handlers for created, updated and deleted entries, and their keys in the activity mapper. | #2 |
+| `apps/api/plane/app/views/issue/activity.py` | Hides worklog activity from project guests in the issue history. Also carries upstream's fix [c23728e](https://github.com/makeplane/plane/commit/c23728e769ac9f6f475b75c02ee8f73adce88a67) (makeplane/plane#9899): in v1.4.3 the history without `activity_type` returns 500. Drop that block at the first release that includes it. | #2 |
+| `apps/api/plane/tests/contract/app/test_issue_history_app.py` | Not in v1.4.3: upstream's regression test for that fix, added by the same cherry-pick. Drop it with the fix. | #2 |
+| `apps/web/tsconfig.json` | The `@/plane-web/*` alias for the fork's frontend files in `apps/web/ce/`. | #2 |
+| `apps/web/core/components/issues/issue-detail/issue-activity/root.tsx` | The "Log time" button, and who can see worklogs and log time. | #2 |
+| `apps/web/core/components/issues/issue-detail/issue-activity/filter-root.tsx` | The worklog filter, shown only where worklogs can exist. The component becomes an observer. | #2 |
+| `apps/web/core/components/issues/issue-detail/issue-activity/activity-comment-root.tsx` | Renders worklog entries in the activity feed. | #2 |
+| `apps/web/core/components/issues/issue-detail/sidebar.tsx` | The "Time Tracking" property in the work item sidebar. | #2 |
+| `apps/web/core/components/issues/peek-overview/properties.tsx` | The same property in the peek overview. | #2 |
+| `apps/web/core/components/project/project-feature-update.tsx` | Uses the fork's features list, which adds the time tracking toggle. | #2 |
+| `apps/web/core/store/issue/issue-details/activity.store.ts` | Gives worklog activity its own activity type. | #2 |
+| `packages/constants/src/issue/filter.ts` | The `WORKLOG` activity filter, selected by default. | #2 |
+| `packages/types/src/project/projects.ts` | `is_time_tracking_enabled` in `IProject`. | #2 |
 
 Files that the fork adds are not upstream files and are not listed: this file, the
 `apps/api/plane/ext/` app, and the fork's own frontend files and tests.
@@ -125,9 +139,20 @@ as they stand on its `preview` branch at commit `d16a63297d63c0a300f86531b949b3c
   (section 5a). Here that notice is this file, the ledger, the `Fork (see FORK.md)` comments and the
   pull request history.
 
+Where Hangar's files mix worklogs with its other features (epics, issue types, SSO), only the worklog
+parts are taken. Hangar's `apps/api/plane/ext/auth_urls.py`, an empty module for its SSO routes, is not
+kept.
+
 | Path in this repository | Origin in Hangar | Pull request |
 | --- | --- | --- |
-| _None yet_ | | |
+| `apps/api/plane/ext/__init__.py`, `apps.py`, `migrations/__init__.py`, `serializers/__init__.py` and `views/__init__.py` | Same paths. | [2](https://github.com/szymczag/hangar/pull/2) |
+| `apps/api/plane/ext/models/__init__.py` and `apps/api/plane/ext/urls.py` | Same paths, with only the worklog entries. | [2](https://github.com/szymczag/hangar/pull/2), [12](https://github.com/szymczag/hangar/pull/12) |
+| `apps/api/plane/ext/models/worklog.py`, `serializers/worklog.py` and `views/worklog.py` | Same paths. | [12](https://github.com/szymczag/hangar/pull/12) |
+| `apps/api/plane/ext/migrations/0001_issue_worklog.py` | `apps/api/plane/ext/migrations/0003_issue_worklog.py`, without its dependency on Hangar's earlier `ext` migrations. | [12](https://github.com/szymczag/hangar/pull/12) |
+| `apps/api/plane/tests/contract/app/test_worklog_app.py` | Same path. | [12](https://github.com/szymczag/hangar/pull/12) |
+| `apps/web/ce/components/issues/worklog/`: `activity/root.tsx`, `activity/worklog-create-button.tsx`, `property/root.tsx` and `worklog-modal.tsx` | Same paths. | [13](https://github.com/szymczag/hangar/pull/13) |
+| `apps/web/ce/helpers/worklog.ts`, `apps/web/ce/hooks/use-worklogs.ts`, `apps/web/ce/services/worklog.service.ts` and `apps/web/ce/types/worklog.ts` | Same paths. | [13](https://github.com/szymczag/hangar/pull/13) |
+| `apps/web/ce/components/projects/settings/features-list.tsx` | Same path. It wraps upstream's features list and adds the time tracking toggle, so it carries upstream's header, as in Hangar. A remark about Hangar's epics is removed from its opening comment. | [13](https://github.com/szymczag/hangar/pull/13) |
 
 ## Source code offer
 
