@@ -18,7 +18,7 @@ from rest_framework import status
 from .. import BaseAPIView
 from plane.app.serializers import IssueActivitySerializer, IssueCommentSerializer
 from plane.app.permissions import ProjectEntityPermission, allow_permission, ROLE
-from plane.db.models import IssueActivity, IssueComment, CommentReaction, IntakeIssue
+from plane.db.models import IssueActivity, IssueComment, CommentReaction, IntakeIssue, ProjectMember, WorkspaceMember
 
 
 class IssueActivityEndpoint(BaseAPIView):
@@ -62,6 +62,18 @@ class IssueActivityEndpoint(BaseAPIView):
                 )
             )
         )
+
+        # Fork (see FORK.md): worklog rows are confidential for project guests.
+        project_role = (
+            ProjectMember.objects.filter(project_id=project_id, member=request.user, is_active=True)
+            .values_list("role", flat=True)
+            .first()
+        )
+        is_workspace_admin = WorkspaceMember.objects.filter(
+            workspace__slug=slug, member=request.user, role=ROLE.ADMIN.value, is_active=True
+        ).exists()
+        if project_role not in (ROLE.ADMIN.value, ROLE.MEMBER.value) and not is_workspace_admin:
+            issue_activities = issue_activities.exclude(field="worklog")
 
         if request.GET.get("activity_type", None) == "issue-property":
             issue_activities = issue_activities.prefetch_related(
