@@ -6,6 +6,7 @@
       "@/app/*": ["./app/*"],
       "@/helpers/*": ["./helpers/*"],
       "@/styles/*": ["./styles/*"],
+      // Fork (see FORK.md): the fork's own frontend files
       "@/plane-web/*": ["./ce/*"],
       "package.json": ["./package.json"]
     },

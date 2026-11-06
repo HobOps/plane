@@ -13,7 +13,7 @@ import type { TCommentsOperations } from "@plane/types";
 import { CommentCard } from "@/components/comments/card/root";
 // hooks
 import { useIssueDetail } from "@/hooks/store/use-issue-detail";
-// Hangar extensions
+// Fork (see FORK.md): worklogs
 import { IssueActivityWorklog } from "@/plane-web/components/issues/worklog/activity/root";
 // local imports
 import { IssueActivityItem } from "./activity/activity-list";
@@ -29,6 +29,7 @@ type TIssueActivityCommentRoot = {
   showAccessSpecifier?: boolean;
   disabled?: boolean;
   sortOrder: E_SORT_ORDER;
+  // Fork (see FORK.md): worklogs
   canViewWorklogs: boolean;
 };
 
@@ -43,6 +44,7 @@ export const IssueActivityCommentRoot = observer(function IssueActivityCommentRo
     projectId,
     disabled,
     sortOrder,
+    // Fork (see FORK.md): worklogs
     canViewWorklogs,
   } = props;
   // store hooks
@@ -83,7 +85,8 @@ export const IssueActivityCommentRoot = observer(function IssueActivityCommentRo
             activityId={activityComment.id}
             ends={index === 0 ? "top" : index === filteredActivityAndComments.length - 1 ? "bottom" : undefined}
           />
-        ) : canViewWorklogs && activityComment.activity_type === "WORKLOG" ? (
+        ) : // Fork (see FORK.md): worklog entries
+        canViewWorklogs && activityComment.activity_type === "WORKLOG" ? (
           <IssueActivityWorklog
             key={activityComment.id}
             workspaceSlug={workspaceSlug}
@@ -92,9 +95,7 @@ export const IssueActivityCommentRoot = observer(function IssueActivityCommentRo
             activityComment={activityComment}
             ends={index === 0 ? "top" : index === filteredActivityAndComments.length - 1 ? "bottom" : undefined}
           />
-        ) : (
-          <></>
-        );
+        ) : null;
       })}
     </div>
   );

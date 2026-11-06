@@ -14,7 +14,8 @@ import { Row } from "@plane/ui";
 // components
 // hooks
 import { useProject } from "@/hooks/store/use-project";
-// Hangar extension
+// plane web imports
+// Fork (see FORK.md): the features list with the time tracking toggle
 import { ProjectFeaturesList } from "@/plane-web/components/projects/settings/features-list";
 
 type Props = {

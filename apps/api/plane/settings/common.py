@@ -111,7 +111,7 @@ INSTALLED_APPS = [
     "plane.license",
     "plane.api",
     "plane.authentication",
-    # Fork extensions (see FORK.md)
+    # Fork (see FORK.md): the fork's Django app
     "plane.ext",
     # Third-party things
     "rest_framework",
