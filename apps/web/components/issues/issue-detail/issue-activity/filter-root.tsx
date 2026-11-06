@@ -4,13 +4,14 @@
  * See the LICENSE file for details.
  */
 
-import { observer } from "mobx-react";
 // plane imports
 import type { TActivityFilters, TActivityFilterOption } from "@plane/constants";
-import { ACTIVITY_FILTER_TYPE_OPTIONS, EActivityFilterType } from "@plane/constants";
+import { ACTIVITY_FILTER_TYPE_OPTIONS } from "@plane/constants";
 // components
 import { ActivityFilter } from "@/components/issues/issue-detail/issue-activity";
-// hooks
+// Fork (see FORK.md): worklog filter
+import { observer } from "mobx-react";
+import { EActivityFilterType } from "@plane/constants";
 import { useProject } from "@/hooks/store/use-project";
 
 export type TActivityFilterRoot = {
@@ -20,9 +21,11 @@ export type TActivityFilterRoot = {
   isIntakeIssue?: boolean;
   /** Restricts the options to these filters (e.g. the ones the active activity tab covers). */
   filterKeys?: TActivityFilters[];
+  // Fork (see FORK.md): worklogs
   canViewWorklogs: boolean;
 };
 
+// Fork (see FORK.md): an observer that hides the worklog filter where there can be no worklogs
 export const ActivityFilterRoot = observer(function ActivityFilterRoot(props: TActivityFilterRoot) {
   const { selectedFilters, toggleFilter, filterKeys, projectId, isIntakeIssue = false, canViewWorklogs } = props;
   // store hooks

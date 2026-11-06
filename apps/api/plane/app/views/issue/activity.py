@@ -19,7 +19,10 @@ from .. import BaseAPIView
 from .relation import issue_in_project
 from plane.app.serializers import IssueActivitySerializer, IssueCommentSerializer
 from plane.app.permissions import ProjectEntityPermission, allow_permission, issue_hidden_from_guest, ROLE
-from plane.db.models import IssueActivity, IssueComment, CommentReaction, IntakeIssue, ProjectMember, WorkspaceMember
+from plane.db.models import IssueActivity, IssueComment, CommentReaction, IntakeIssue
+
+# Fork (see FORK.md): models for the worklog visibility check below
+from plane.db.models import ProjectMember, WorkspaceMember
 
 
 class IssueActivityEndpoint(BaseAPIView):
@@ -105,6 +108,7 @@ class IssueActivityEndpoint(BaseAPIView):
             issue_comments = IssueCommentSerializer(issue_comments, many=True).data
             return Response(issue_comments, status=status.HTTP_200_OK)
 
+        # Fork (see FORK.md): backport of upstream c23728e (#9899), drop it at the next release
         result_list = sorted(
             chain(
                 IssueActivitySerializer(issue_activities, many=True).data,
