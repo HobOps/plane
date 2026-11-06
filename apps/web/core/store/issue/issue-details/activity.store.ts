@@ -99,14 +99,17 @@ export class IssueActivityStore implements IIssueActivityStore {
     activities.forEach((activityId) => {
       const activity = this.getActivityById(activityId);
       if (!activity) return;
+      // Fork (see FORK.md): worklog entries carry their own activity type.
       const type =
-        activity.field === "state"
-          ? EActivityFilterType.STATE
-          : activity.field === "assignees"
-            ? EActivityFilterType.ASSIGNEE
-            : activity.field === null
-              ? EActivityFilterType.DEFAULT
-              : EActivityFilterType.ACTIVITY;
+        activity.field === "worklog"
+          ? EActivityFilterType.WORKLOG
+          : activity.field === "state"
+            ? EActivityFilterType.STATE
+            : activity.field === "assignees"
+              ? EActivityFilterType.ASSIGNEE
+              : activity.field === null
+                ? EActivityFilterType.DEFAULT
+                : EActivityFilterType.ACTIVITY;
       activityComments.push({
         id: activity.id,
         activity_type: type,
