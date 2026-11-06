@@ -35,8 +35,8 @@ import { useIssueDetail } from "@/hooks/store/use-issue-detail";
 import { useMember } from "@/hooks/store/use-member";
 import { useProject } from "@/hooks/store/use-project";
 import { useProjectState } from "@/hooks/store/use-project-state";
-import { useUserPermissions } from "@/hooks/store/user";
 // Fork (see FORK.md): worklogs
+import { useUserPermissions } from "@/hooks/store/user";
 import { IssueWorklogProperty } from "@/plane-web/components/issues/worklog/property/root";
 import { canViewWorklogsForRole } from "@/plane-web/helpers/worklog";
 // components
@@ -60,6 +60,7 @@ export const IssueDetailsSidebar = observer(function IssueDetailsSidebar(props: 
   const { workspaceSlug, projectId, issueId, issueOperations, isEditable } = props;
   // store hooks
   const { getProjectById } = useProject();
+  // Fork (see FORK.md): the project role decides who sees worklogs
   const { getProjectRoleByWorkspaceSlugAndProjectId } = useUserPermissions();
   const { areEstimateEnabledByProjectId } = useProjectEstimates();
   const {
@@ -75,6 +76,7 @@ export const IssueDetailsSidebar = observer(function IssueDetailsSidebar(props: 
   // derived values
   const projectDetails = getProjectById(issue.project_id);
   const stateDetails = getStateById(issue.state_id);
+  // Fork (see FORK.md): worklogs
   const projectRole = getProjectRoleByWorkspaceSlugAndProjectId(workspaceSlug, projectId);
   const canViewWorklogs = canViewWorklogsForRole(projectRole);
 
@@ -255,6 +257,7 @@ export const IssueDetailsSidebar = observer(function IssueDetailsSidebar(props: 
                 disabled={!isEditable}
               />
             </SidebarPropertyListItem>
+            {/* Fork (see FORK.md): worklogs */}
             <IssueWorklogProperty
               workspaceSlug={workspaceSlug}
               projectId={projectId}

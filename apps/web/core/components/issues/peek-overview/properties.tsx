@@ -35,8 +35,8 @@ import { useIssueDetail } from "@/hooks/store/use-issue-detail";
 import { useMember } from "@/hooks/store/use-member";
 import { useProject } from "@/hooks/store/use-project";
 import { useProjectState } from "@/hooks/store/use-project-state";
-import { useUserPermissions } from "@/hooks/store/user";
 // Fork (see FORK.md): worklogs
+import { useUserPermissions } from "@/hooks/store/user";
 import { IssueWorklogProperty } from "@/plane-web/components/issues/worklog/property/root";
 import { canViewWorklogsForRole } from "@/plane-web/helpers/worklog";
 // plane web components
@@ -59,6 +59,7 @@ export const PeekOverviewProperties = observer(function PeekOverviewProperties(p
   const { t } = useTranslation();
   // store hooks
   const { getProjectById } = useProject();
+  // Fork (see FORK.md): the project role decides who sees worklogs
   const { getProjectRoleByWorkspaceSlugAndProjectId } = useUserPermissions();
   const {
     issue: { getIssueById },
@@ -72,6 +73,7 @@ export const PeekOverviewProperties = observer(function PeekOverviewProperties(p
   const projectDetails = getProjectById(issue.project_id);
   const isEstimateEnabled = projectDetails?.estimate;
   const stateDetails = getStateById(issue.state_id);
+  // Fork (see FORK.md): worklogs
   const projectRole = getProjectRoleByWorkspaceSlugAndProjectId(workspaceSlug, projectId);
   const canViewWorklogs = canViewWorklogsForRole(projectRole);
 
@@ -250,6 +252,7 @@ export const PeekOverviewProperties = observer(function PeekOverviewProperties(p
         <SidebarPropertyListItem icon={LabelPropertyIcon} label={t("common.labels")}>
           <IssueLabel workspaceSlug={workspaceSlug} projectId={projectId} issueId={issueId} disabled={disabled} />
         </SidebarPropertyListItem>
+        {/* Fork (see FORK.md): worklogs */}
         <IssueWorklogProperty
           workspaceSlug={workspaceSlug}
           projectId={projectId}
