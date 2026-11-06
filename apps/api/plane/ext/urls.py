@@ -3,8 +3,7 @@
 # See the LICENSE file for details.
 
 # Fork API endpoints, mounted under /api/ alongside plane.app.urls.
-# Feature URL modules are appended here as phases land (epics, issue types,
-# properties, worklogs).
+# Only Hangar's worklog routes are ported (see FORK.md).
 
 from django.urls import path
 
