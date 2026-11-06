@@ -15,6 +15,8 @@ import type { TCommentsOperations } from "@plane/types";
 import { CommentCard } from "@/components/comments/card/root";
 // hooks
 import { useIssueDetail } from "@/hooks/store/use-issue-detail";
+// Hangar extensions
+import { IssueActivityWorklog } from "@/plane-web/components/issues/worklog/activity/root";
 // local imports
 import { IssueActivityItem } from "./activity/activity-list";
 import { IssueActivityLoader } from "./loader";
@@ -29,6 +31,7 @@ type TIssueActivityCommentRoot = {
   showAccessSpecifier?: boolean;
   disabled?: boolean;
   sortOrder: E_SORT_ORDER;
+  canViewWorklogs: boolean;
 };
 
 export const IssueActivityCommentRoot = observer(function IssueActivityCommentRoot(props: TIssueActivityCommentRoot) {
@@ -42,6 +45,7 @@ export const IssueActivityCommentRoot = observer(function IssueActivityCommentRo
     projectId,
     disabled,
     sortOrder,
+    canViewWorklogs,
   } = props;
   // translation
   const { t } = useTranslation();
@@ -93,6 +97,15 @@ export const IssueActivityCommentRoot = observer(function IssueActivityCommentRo
           />
         ) : BASE_ACTIVITY_FILTER_TYPES.includes(activityComment.activity_type as EActivityFilterType) ? (
           <IssueActivityItem key={activityComment.id} activityId={activityComment.id} ends={getEnds(index)} />
+        ) : canViewWorklogs && activityComment.activity_type === "WORKLOG" ? (
+          <IssueActivityWorklog
+            key={activityComment.id}
+            workspaceSlug={workspaceSlug}
+            projectId={projectId}
+            issueId={issueId}
+            activityComment={activityComment}
+            ends={getEnds(index)}
+          />
         ) : null;
       })}
     </div>
