@@ -18,18 +18,19 @@ import type { TFileSignedURLResponse, TIssueComment } from "@plane/types";
 // components
 import { CommentCreate } from "@/components/comments/comment-create";
 // hooks
-import { useIssueDetail } from "@/hooks/store/use-issue-detail";
 import { useProject } from "@/hooks/store/use-project";
+// Fork (see FORK.md): worklogs
+import { EUserPermissions } from "@plane/constants";
+import { useIssueDetail } from "@/hooks/store/use-issue-detail";
 import { useUser, useUserPermissions } from "@/hooks/store/user";
-// Hangar extensions
 import { IssueActivityWorklogCreateButton } from "@/plane-web/components/issues/worklog/activity/worklog-create-button";
 // local imports
-import { ActivityFilterRoot } from "./filter-root";
 import { IssueActivityCommentRoot } from "./activity-comment-root";
 import type { TActivityTab } from "./activity-tabs";
 import { ActivityTabs, getActivityTabId, getActivityTabPanelId } from "./activity-tabs";
 import { useWorkItemCommentOperations } from "./helper";
 import { ActivitySortRoot } from "./sort-root";
+import { ActivityFilterRoot } from "./filter-root";
 
 type TIssueActivity = {
   workspaceSlug: string;
@@ -50,6 +51,7 @@ const ACTIVITY_TAB_FILTERS: Record<TActivityTabKey, TActivityFilters[]> = {
     EActivityFilterType.ACTIVITY,
     EActivityFilterType.STATE,
     EActivityFilterType.ASSIGNEE,
+    // Fork (see FORK.md): worklog entries count as activity
     EActivityFilterType.WORKLOG,
   ],
   comment: [EActivityFilterType.COMMENT],
@@ -76,11 +78,12 @@ export const IssueActivity = observer(function IssueActivity(props: TIssueActivi
   );
   const { setValue: setSortOrder, storedValue: sortOrder } = useLocalStorage("activity_sort_order", E_SORT_ORDER.ASC);
 
+  const { getProjectById } = useProject();
+  // Fork (see FORK.md): who can see worklogs and log time
   const {
     issue: { getIssueById },
   } = useIssueDetail();
   const { getProjectRoleByWorkspaceSlugAndProjectId } = useUserPermissions();
-  const { getProjectById } = useProject();
   const { data: currentUser } = useUser();
   // derived values
   const issue = issueId ? getIssueById(issueId) : undefined;
@@ -155,6 +158,7 @@ export const IssueActivity = observer(function IssueActivity(props: TIssueActivi
         ariaLabel={t("common.activity")}
         actionsElement={
           <>
+            {/* Fork (see FORK.md): log time */}
             {isWorklogButtonEnabled && (
               <IssueActivityWorklogCreateButton
                 workspaceSlug={workspaceSlug}
@@ -171,6 +175,7 @@ export const IssueActivity = observer(function IssueActivity(props: TIssueActivi
                 isIntakeIssue={isIntakeIssue}
                 projectId={projectId}
                 filterKeys={activeTabFilters}
+                // Fork (see FORK.md): worklogs
                 canViewWorklogs={canViewWorklogs}
               />
             )}
@@ -199,6 +204,7 @@ export const IssueActivity = observer(function IssueActivity(props: TIssueActivi
               showAccessSpecifier={!!project.anchor}
               disabled={disabled}
               sortOrder={sortOrder || E_SORT_ORDER.ASC}
+              // Fork (see FORK.md): worklogs
               canViewWorklogs={canViewWorklogs}
             />
             {showCommentBox && sortOrder === E_SORT_ORDER.ASC && renderCommentCreationBox}

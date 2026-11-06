@@ -5,8 +5,7 @@
  */
 
 // Fork (see FORK.md): wraps the core features list and appends the fork's
-// Time tracking toggle. Epic is a work item type configured under Work item
-// types, not a separately enabled project feature.
+// Time tracking toggle.
 
 import { useState } from "react";
 import { observer } from "mobx-react";
