@@ -28,6 +28,10 @@ import { useProjectEstimates } from "@/hooks/store/estimates";
 import { useIssueDetail } from "@/hooks/store/use-issue-detail";
 import { useMember } from "@/hooks/store/use-member";
 import { useProject } from "@/hooks/store/use-project";
+import { useUserPermissions } from "@/hooks/store/user";
+// Fork (see FORK.md): worklogs
+import { IssueWorklogProperty } from "@/plane-web/components/issues/worklog/property/root";
+import { canViewWorklogsForRole } from "@/plane-web/helpers/worklog";
 // local imports
 import { IssueCycleSelect } from "./cycle-select";
 import { IssueLabel } from "./label";
@@ -64,6 +68,9 @@ export const IssueDetailSidebarSections = observer(function IssueDetailSidebarSe
     issue: { getIssueById },
   } = useIssueDetail();
   const { getUserDetails } = useMember();
+  // Fork (see FORK.md): worklogs
+  const { getProjectRoleByWorkspaceSlugAndProjectId } = useUserPermissions();
+  const canViewWorklogs = canViewWorklogsForRole(getProjectRoleByWorkspaceSlugAndProjectId(workspaceSlug, projectId));
   // derived values
   const issue = getIssueById(issueId);
   if (!issue) return null;
@@ -142,6 +149,15 @@ export const IssueDetailSidebarSections = observer(function IssueDetailSidebarSe
               />
             </SidebarPropertyListItem>
           )}
+
+          {/* Fork (see FORK.md): the "Time Tracking" property */}
+          <IssueWorklogProperty
+            workspaceSlug={workspaceSlug}
+            projectId={projectId}
+            issueId={issueId}
+            disabled={disabled}
+            canViewWorklogs={canViewWorklogs}
+          />
         </IssueDetailSidebarGroup>
 
         {hasProjectStructureProperties && (

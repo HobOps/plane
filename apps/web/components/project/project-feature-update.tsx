@@ -14,8 +14,8 @@ import { Logo } from "@plane/blocks/emoji-icon-picker";
 // components
 // hooks
 import { useProject } from "@/hooks/store/use-project";
-// plane web imports
-import { ProjectFeaturesList } from "@/components/project/settings/features-list";
+// Hangar extension
+import { ProjectFeaturesList } from "@/plane-web/components/projects/settings/features-list";
 
 type Props = {
   workspaceSlug: string;
