@@ -6,6 +6,8 @@
 
 import type { LucideIcon } from "lucide-react";
 import { Users, Zap } from "lucide-react";
+// Fork (see FORK.md): time tracking settings
+import { Timer } from "lucide-react";
 // plane imports
 import type { ISvgIcons } from "@plane/propel/icons";
 import {
@@ -30,6 +32,8 @@ export const PROJECT_SETTINGS_ICONS: Record<TProjectSettingsTabs, LucideIcon | R
   features_views: ViewsIcon,
   features_pages: PageIcon,
   features_intake: IntakeIcon,
+  // Fork (see FORK.md): time tracking settings
+  features_time_tracking: Timer,
   states: StatePropertyIcon,
   labels: LabelPropertyIcon,
   estimates: EstimatePropertyIcon,

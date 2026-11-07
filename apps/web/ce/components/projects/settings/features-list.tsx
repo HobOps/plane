@@ -46,12 +46,12 @@ const TimeTrackingFeatureToggle = observer(function TimeTrackingFeatureToggle(pr
       await updateProject(workspaceSlug, projectId, { is_time_tracking_enabled: next });
       setToast({
         type: TOAST_TYPE.SUCCESS,
-        title: "Success!",
-        message: `Time tracking ${next ? "enabled" : "disabled"} for this project.`,
+        title: t("worklog.toggle_success_title"),
+        message: t(next ? "worklog.toggle_enabled" : "worklog.toggle_disabled"),
       });
     } catch (error) {
       console.error(error);
-      setToast({ type: TOAST_TYPE.ERROR, title: "Error!", message: "Failed to update the time tracking setting." });
+      setToast({ type: TOAST_TYPE.ERROR, title: t("worklog.error_title"), message: t("worklog.toggle_failed") });
     } finally {
       setIsSubmitting(false);
     }

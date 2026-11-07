@@ -8,6 +8,8 @@ export type TIssueWorklog = {
   id: string;
   duration: number; // minutes
   description: string;
+  // HobOps: the date of the work, null on entries from before Plane Cloud added it.
+  logged_at: string | null;
   logged_by: string | null;
   issue: string;
   project: string;
