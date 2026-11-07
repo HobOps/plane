@@ -131,12 +131,12 @@ class TestWorklogListAndCreate:
 
         response = api_key_client.get(worklogs_url(workspace, project, issue, family))
         assert response.status_code == status.HTTP_200_OK
-        assert isinstance(response.data, list)
-        assert [entry["id"] for entry in response.data] == [str(newer.id), str(older.id)]
-        for entry in response.data:
+        assert isinstance(response.json(), list)
+        assert [entry["id"] for entry in response.json()] == [str(newer.id), str(older.id)]
+        for entry in response.json():
             assert_cloud_worklog(entry)
-        assert response.data[0]["project_id"] == str(project.id)
-        assert response.data[0]["workspace_id"] == str(workspace.id)
+        assert response.json()[0]["project_id"] == str(project.id)
+        assert response.json()[0]["workspace_id"] == str(workspace.id)
 
     @pytest.mark.django_db
     @pytest.mark.parametrize("family", FAMILIES)
@@ -148,15 +148,15 @@ class TestWorklogListAndCreate:
                 {"duration": 30, "description": "Reviewed the port"},
                 format="json",
             )
-        assert response.status_code == status.HTTP_201_CREATED, response.data
-        assert_cloud_worklog(response.data)
-        assert response.data["duration"] == 30
-        assert response.data["description"] == "Reviewed the port"
+        assert response.status_code == status.HTTP_201_CREATED, response.json()
+        assert_cloud_worklog(response.json())
+        assert response.json()["duration"] == 30
+        assert response.json()["description"] == "Reviewed the port"
         # Cloud fills in the day at 12:00 UTC when logged_at is left out.
-        assert response.data["logged_at"] == "2026-11-06T12:00:00Z"
-        assert response.data["logged_by"] == str(create_user.id)
-        assert response.data["created_by"] == str(create_user.id)
-        assert response.data["updated_by"] is None
+        assert response.json()["logged_at"] == "2026-11-06T12:00:00Z"
+        assert response.json()["logged_by"] == str(create_user.id)
+        assert response.json()["created_by"] == str(create_user.id)
+        assert response.json()["updated_by"] is None
 
     @pytest.mark.django_db
     def test_create_keeps_a_given_logged_at(self, api_key_client, workspace, project, issue):
@@ -165,20 +165,20 @@ class TestWorklogListAndCreate:
             {"duration": 20, "logged_at": "2026-10-04T08:30:00Z"},
             format="json",
         )
-        assert response.status_code == status.HTTP_201_CREATED, response.data
-        assert response.data["logged_at"] == "2026-10-04T08:30:00Z"
+        assert response.status_code == status.HTTP_201_CREATED, response.json()
+        assert response.json()["logged_at"] == "2026-10-04T08:30:00Z"
 
     @pytest.mark.django_db
     def test_create_without_duration_is_zero_minutes(self, api_key_client, workspace, project, issue):
         response = api_key_client.post(worklogs_url(workspace, project, issue), {"description": "x"}, format="json")
-        assert response.status_code == status.HTTP_201_CREATED, response.data
-        assert response.data["duration"] == 0
+        assert response.status_code == status.HTTP_201_CREATED, response.json()
+        assert response.json()["duration"] == 0
 
     @pytest.mark.django_db
     def test_negative_duration_is_rejected_like_cloud(self, api_key_client, workspace, project, issue):
         response = api_key_client.post(worklogs_url(workspace, project, issue), {"duration": -1}, format="json")
         assert response.status_code == status.HTTP_400_BAD_REQUEST
-        assert response.data == CLOUD_NEGATIVE
+        assert response.json() == CLOUD_NEGATIVE
         assert not IssueWorkLog.objects.exists()
 
     @pytest.mark.django_db
@@ -186,7 +186,7 @@ class TestWorklogListAndCreate:
         # Cloud accepts it; this fork keeps the 1,440-minute cap of the model.
         response = api_key_client.post(worklogs_url(workspace, project, issue), {"duration": 1441}, format="json")
         assert response.status_code == status.HTTP_400_BAD_REQUEST
-        assert "duration" in response.data
+        assert "duration" in response.json()
         assert not IssueWorkLog.objects.exists()
 
     @pytest.mark.django_db
@@ -196,8 +196,8 @@ class TestWorklogListAndCreate:
             {"duration": 10, "logged_by": str(uuid4())},
             format="json",
         )
-        assert response.status_code == status.HTTP_201_CREATED, response.data
-        assert response.data["logged_by"] == str(create_user.id)
+        assert response.status_code == status.HTTP_201_CREATED, response.json()
+        assert response.json()["logged_by"] == str(create_user.id)
 
 
 @pytest.mark.contract
@@ -207,31 +207,31 @@ class TestWorklogUpdateAndDelete:
     def test_patch_then_delete(self, api_key_client, workspace, project, issue, create_user, family):
         url = worklogs_url(workspace, project, issue, family)
         created = api_key_client.post(url, {"duration": 30, "description": "draft"}, format="json")
-        assert created.status_code == status.HTTP_201_CREATED, created.data
+        assert created.status_code == status.HTTP_201_CREATED, created.json()
 
         patched = api_key_client.patch(
-            f"{url}{created.data['id']}/",
+            f"{url}{created.json()['id']}/",
             {"duration": 45, "description": "final", "logged_at": "2026-10-04T12:00:00Z"},
             format="json",
         )
-        assert patched.status_code == status.HTTP_200_OK, patched.data
-        assert_cloud_worklog(patched.data)
-        assert patched.data["duration"] == 45
-        assert patched.data["description"] == "final"
-        assert patched.data["logged_at"] == "2026-10-04T12:00:00Z"
-        assert patched.data["updated_by"] == str(create_user.id)
+        assert patched.status_code == status.HTTP_200_OK, patched.json()
+        assert_cloud_worklog(patched.json())
+        assert patched.json()["duration"] == 45
+        assert patched.json()["description"] == "final"
+        assert patched.json()["logged_at"] == "2026-10-04T12:00:00Z"
+        assert patched.json()["updated_by"] == str(create_user.id)
 
-        deleted = api_key_client.delete(f"{url}{created.data['id']}/")
+        deleted = api_key_client.delete(f"{url}{created.json()['id']}/")
         assert deleted.status_code == status.HTTP_204_NO_CONTENT
-        assert api_key_client.get(url).data == []
+        assert api_key_client.get(url).json() == []
 
     @pytest.mark.django_db
     def test_member_cannot_edit_someone_elses_entry(self, api_key_client, workspace, project, issue):
         url = worklogs_url(workspace, project, issue)
         created = api_key_client.post(url, {"duration": 30}, format="json")
         member, _ = key_client(workspace, project, project_role=15)
-        assert member.patch(f"{url}{created.data['id']}/", {"duration": 1}, format="json").status_code == 403
-        assert member.delete(f"{url}{created.data['id']}/").status_code == 403
+        assert member.patch(f"{url}{created.json()['id']}/", {"duration": 1}, format="json").status_code == 403
+        assert member.delete(f"{url}{created.json()['id']}/").status_code == 403
 
     @pytest.mark.django_db
     def test_missing_entry_is_not_found(self, api_key_client, workspace, project, issue):
@@ -255,9 +255,9 @@ class TestTotalWorklogs:
 
         response = api_key_client.get(f"{base(workspace, project)}/total-worklogs/")
         assert response.status_code == status.HTTP_200_OK
-        assert all(list(row.keys()) == list(CLOUD_TOTAL_EXAMPLE.keys()) for row in response.data)
+        assert all(list(row.keys()) == list(CLOUD_TOTAL_EXAMPLE.keys()) for row in response.json())
         expected = sorted([(str(issue.id), 45), (str(second.id), 60)])
-        assert [(row["issue_id"], row["duration"]) for row in response.data] == expected
+        assert [(row["issue_id"], row["duration"]) for row in response.json()] == expected
 
 
 @pytest.mark.contract
@@ -291,7 +291,7 @@ class TestWorklogAccess:
             api_key_client.get(f"{base(workspace, project)}/total-worklogs/"),
         ):
             assert response.status_code == status.HTTP_404_NOT_FOUND
-            assert response.data == CLOUD_NOT_ENABLED
+            assert response.json() == CLOUD_NOT_ENABLED
 
     @pytest.mark.django_db
     @pytest.mark.parametrize("family", FAMILIES)
@@ -299,7 +299,7 @@ class TestWorklogAccess:
         url = f"{base(workspace, project)}/{family}/{uuid4()}/worklogs/"
         for response in (api_key_client.get(url), api_key_client.post(url, {"duration": 5}, format="json")):
             assert response.status_code == status.HTTP_403_FORBIDDEN
-            assert response.data == CLOUD_NO_ACCESS
+            assert response.json() == CLOUD_NO_ACCESS
 
     @pytest.mark.django_db
     def test_work_item_of_another_project_answers_like_cloud(
@@ -311,4 +311,4 @@ class TestWorklogAccess:
         ProjectMember.objects.create(project=other, member=create_user, role=20, is_active=True)
         response = api_key_client.get(f"{base(workspace, other)}/issues/{issue.id}/worklogs/")
         assert response.status_code == status.HTTP_403_FORBIDDEN
-        assert response.data == CLOUD_NO_ACCESS
+        assert response.json() == CLOUD_NO_ACCESS
