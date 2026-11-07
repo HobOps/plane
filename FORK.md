@@ -126,10 +126,16 @@ git grep -n "Fork (see FORK.md)"
 | `packages/constants/src/issue/filter.ts` | The `WORKLOG` activity filter, selected by default. | #2 |
 | `packages/types/src/project/projects.ts` | `is_time_tracking_enabled` in `IProject`. | #2 |
 | `apps/web/app/(all)/[workspaceSlug]/(projects)/star-us-link.tsx` | The GitHub link points to this repository instead of upstream's: the [source code offer](#source-code-offer). | #4 |
+| `packages/i18n/src/constants/namespaces.ts` | Registers `worklog`, the fork's i18n namespace. Its strings are in English and Spanish; other languages fall back to English. | #7 |
+| `packages/types/src/settings.ts` | `features_time_tracking`, the project settings tab for time tracking. | #7 |
+| `packages/constants/src/settings/project.ts` | That tab, under Features in the project settings. | #7 |
+| `apps/web/core/components/settings/project/sidebar/item-icon.tsx` | The icon of that tab. | #7 |
+| `apps/web/app/routes/core.ts` | The route of that tab's page. | #7 |
 | `.github/workflows/` | Removed: all of upstream's workflows. In v1.4.3 they are `build-branch`, `check-version`, `codeql`, `copyright-check`, `feature-deployment`, `i18n-sync-check`, `pull-request-build-lint-api`, `pull-request-build-lint-web-apps` and `react-doctor`. The fork's own `ci.yml` and `images.yml` are not upstream files. See [GitHub Actions](#github-actions). | #3 |
 
 Files that the fork adds are not upstream files and are not listed: this file, the
-`apps/api/plane/ext/` app, and the fork's own frontend files and tests.
+`apps/api/plane/ext/` app, the fork's own frontend files (`apps/web/ce/`, the time tracking settings
+page in `features/time-tracking/` and the `worklog.json` i18n files) and tests.
 
 ## Code ported from Hangar
 
@@ -163,9 +169,9 @@ kept.
 | `apps/api/plane/ext/models/worklog.py`, `serializers/worklog.py` and `views/worklog.py` | Same paths. The fork adds `logged_at` and lowers the minimum to 0 minutes (#5). | [12](https://github.com/szymczag/hangar/pull/12) |
 | `apps/api/plane/ext/migrations/0001_issue_worklog.py` | `apps/api/plane/ext/migrations/0003_issue_worklog.py`, without its dependency on Hangar's earlier `ext` migrations. The fork adds `logged_at` and the 0-minute minimum to it (#5), before any instance had applied it. | [12](https://github.com/szymczag/hangar/pull/12) |
 | `apps/api/plane/tests/contract/app/test_worklog_app.py` | Same path. `test_duration_bounds` no longer treats 0 minutes as invalid, and the fork adds `TestWorklogCloudData` (#5). | [12](https://github.com/szymczag/hangar/pull/12) |
-| `apps/web/ce/components/issues/worklog/`: `activity/root.tsx`, `activity/worklog-create-button.tsx`, `property/root.tsx` and `worklog-modal.tsx` | Same paths. | [13](https://github.com/szymczag/hangar/pull/13) |
-| `apps/web/ce/helpers/worklog.ts`, `apps/web/ce/hooks/use-worklogs.ts`, `apps/web/ce/services/worklog.service.ts` and `apps/web/ce/types/worklog.ts` | Same paths. | [13](https://github.com/szymczag/hangar/pull/13) |
-| `apps/web/ce/components/projects/settings/features-list.tsx` | Same path. It wraps upstream's features list and adds the time tracking toggle, so it carries upstream's header, as in Hangar. A remark about Hangar's epics is removed from its opening comment. | [13](https://github.com/szymczag/hangar/pull/13) |
+| `apps/web/ce/components/issues/worklog/`: `activity/root.tsx`, `activity/worklog-create-button.tsx`, `property/root.tsx` and `worklog-modal.tsx` | Same paths. The fork adds the date of the work and the 0-minute minimum, and moves the hardcoded English to the `worklog` i18n strings (#7). | [13](https://github.com/szymczag/hangar/pull/13) |
+| `apps/web/ce/helpers/worklog.ts`, `apps/web/ce/hooks/use-worklogs.ts`, `apps/web/ce/services/worklog.service.ts` and `apps/web/ce/types/worklog.ts` | Same paths. The fork adds the work date helpers, `logged_at` and the 0-minute minimum (#7). | [13](https://github.com/szymczag/hangar/pull/13) |
+| `apps/web/ce/components/projects/settings/features-list.tsx` | Same path. It wraps upstream's features list and adds the time tracking toggle, so it carries upstream's header, as in Hangar. A remark about Hangar's epics is removed from its opening comment, and its messages use the `worklog` i18n strings (#7). | [13](https://github.com/szymczag/hangar/pull/13) |
 
 ## Worklog API
 

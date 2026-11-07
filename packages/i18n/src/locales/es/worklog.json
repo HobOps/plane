@@ -1,0 +1,33 @@
+{
+  "worklog": {
+    "log_time": "Registrar tiempo",
+    "duration_placeholder": "2h 30m",
+    "description_placeholder": "¿Qué se hizo? (opcional)",
+    "work_date": "Fecha del trabajo",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "close": "Cerrar",
+    "edit": "Editar registro",
+    "delete": "Borrar registro",
+    "delete_title": "Borrar registro de tiempo",
+    "delete_content": "¿Seguro que quieres borrar este registro de tiempo? No se puede deshacer.",
+    "invalid_duration_title": "Duración no válida",
+    "invalid_duration_message": "Usa un formato como «2h 30m», «45m» o sólo minutos, de 0 a 24h.",
+    "invalid_date_title": "Fecha no válida",
+    "invalid_date_message": "Elige la fecha del trabajo. No puede ser futura.",
+    "error_title": "Error",
+    "create_failed": "No se pudo registrar el tiempo.",
+    "update_failed": "No se pudo actualizar el registro.",
+    "delete_failed": "No se pudo borrar el registro.",
+    "toggle_success_title": "Listo",
+    "toggle_enabled": "Seguimiento de tiempo habilitado en este proyecto.",
+    "toggle_disabled": "Seguimiento de tiempo deshabilitado en este proyecto.",
+    "toggle_failed": "No se pudo cambiar el seguimiento de tiempo.",
+    "activity": {
+      "logged": "registró",
+      "updated_from": "cambió el tiempo registrado de",
+      "to": "a",
+      "removed": "quitó el tiempo registrado"
+    }
+  }
+}

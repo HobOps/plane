@@ -7,6 +7,7 @@
 import { observer } from "mobx-react";
 import { Timer } from "lucide-react";
 // plane imports
+import { useTranslation } from "@plane/i18n";
 import type { TIssueActivityComment } from "@plane/types";
 // components
 import { IssueActivityBlockComponent } from "@/components/issues/issue-detail/issue-activity/activity/actions";
@@ -23,6 +24,8 @@ type TIssueActivityWorklog = {
 
 export const IssueActivityWorklog = observer(function IssueActivityWorklog(props: TIssueActivityWorklog) {
   const { activityComment, ends } = props;
+  // i18n
+  const { t } = useTranslation();
   // store hooks
   const {
     activity: { getActivityById },
@@ -40,16 +43,17 @@ export const IssueActivityWorklog = observer(function IssueActivityWorklog(props
     >
       {activity.verb === "created" ? (
         <>
-          logged <span className="font-medium text-primary">{activity.new_value}</span>
+          {t("worklog.activity.logged")} <span className="font-medium text-primary">{activity.new_value}</span>
         </>
       ) : activity.verb === "updated" ? (
         <>
-          updated logged time from <span className="font-medium text-primary">{activity.old_value}</span> to{" "}
+          {t("worklog.activity.updated_from")}{" "}
+          <span className="font-medium text-primary">{activity.old_value}</span> {t("worklog.activity.to")}{" "}
           <span className="font-medium text-primary">{activity.new_value}</span>
         </>
       ) : (
         <>
-          removed logged time <span className="font-medium text-primary">{activity.old_value}</span>
+          {t("worklog.activity.removed")} <span className="font-medium text-primary">{activity.old_value}</span>
         </>
       )}
     </IssueActivityBlockComponent>
