@@ -22,7 +22,8 @@ repository are upstream's and describe upstream's product.
    out.
 3. **Isolated backend.** The fork's backend code lives in its own Django app, `apps/api/plane/ext/`,
    with its own tables and migrations. Upstream models and migrations are not modified. The goal is
-   that upstream's images can still run against the same database.
+   that upstream's images can still run against the same database. Once an instance has applied one
+   of the fork's migrations, that migration is never edited again; later changes get a new one.
 4. **Every modified upstream file is registered** in the
    [ledger](#upstream-files-modified-by-this-fork), in the same pull request that modifies it. A pull
    request that changes an upstream file without a ledger entry is not merged.
@@ -159,9 +160,9 @@ kept.
 | --- | --- | --- |
 | `apps/api/plane/ext/__init__.py`, `apps.py`, `migrations/__init__.py`, `serializers/__init__.py` and `views/__init__.py` | Same paths. | [2](https://github.com/szymczag/hangar/pull/2) |
 | `apps/api/plane/ext/models/__init__.py` and `apps/api/plane/ext/urls.py` | Same paths, with only the worklog entries. | [2](https://github.com/szymczag/hangar/pull/2), [12](https://github.com/szymczag/hangar/pull/12) |
-| `apps/api/plane/ext/models/worklog.py`, `serializers/worklog.py` and `views/worklog.py` | Same paths. | [12](https://github.com/szymczag/hangar/pull/12) |
-| `apps/api/plane/ext/migrations/0001_issue_worklog.py` | `apps/api/plane/ext/migrations/0003_issue_worklog.py`, without its dependency on Hangar's earlier `ext` migrations. | [12](https://github.com/szymczag/hangar/pull/12) |
-| `apps/api/plane/tests/contract/app/test_worklog_app.py` | Same path. | [12](https://github.com/szymczag/hangar/pull/12) |
+| `apps/api/plane/ext/models/worklog.py`, `serializers/worklog.py` and `views/worklog.py` | Same paths. The fork adds `logged_at` and lowers the minimum to 0 minutes (#5). | [12](https://github.com/szymczag/hangar/pull/12) |
+| `apps/api/plane/ext/migrations/0001_issue_worklog.py` | `apps/api/plane/ext/migrations/0003_issue_worklog.py`, without its dependency on Hangar's earlier `ext` migrations. The fork adds `logged_at` and the 0-minute minimum to it (#5), before any instance had applied it. | [12](https://github.com/szymczag/hangar/pull/12) |
+| `apps/api/plane/tests/contract/app/test_worklog_app.py` | Same path. `test_duration_bounds` no longer treats 0 minutes as invalid, and the fork adds `TestWorklogCloudData` (#5). | [12](https://github.com/szymczag/hangar/pull/12) |
 | `apps/web/ce/components/issues/worklog/`: `activity/root.tsx`, `activity/worklog-create-button.tsx`, `property/root.tsx` and `worklog-modal.tsx` | Same paths. | [13](https://github.com/szymczag/hangar/pull/13) |
 | `apps/web/ce/helpers/worklog.ts`, `apps/web/ce/hooks/use-worklogs.ts`, `apps/web/ce/services/worklog.service.ts` and `apps/web/ce/types/worklog.ts` | Same paths. | [13](https://github.com/szymczag/hangar/pull/13) |
 | `apps/web/ce/components/projects/settings/features-list.tsx` | Same path. It wraps upstream's features list and adds the time tracking toggle, so it carries upstream's header, as in Hangar. A remark about Hangar's epics is removed from its opening comment. | [13](https://github.com/szymczag/hangar/pull/13) |
