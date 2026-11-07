@@ -1,0 +1,117 @@
+# Copyright (c) 2026-present HobOps and contributors
+# SPDX-License-Identifier: AGPL-3.0-only
+# See the LICENSE file for details.
+
+# Builds the five images of the fork from this repository and pushes them to
+# ghcr.io/hobops (see FORK.md). Pushing a tag v<upstream>-hobops.N publishes that
+# release with the same tag. Running the workflow by hand on a branch publishes
+# its head as sha-<commit>, to try a build without cutting a release.
+name: images
+
+on:
+  push:
+    tags: ["v*-hobops.*"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: images-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  tag:
+    name: tag
+    runs-on: ubuntu-24.04
+    outputs:
+      tag: ${{ steps.tag.outputs.tag }}
+    steps:
+      - name: Pick the image tag
+        id: tag
+        run: |
+          if [ "${GITHUB_REF_TYPE}" = "tag" ]; then
+            tag="${GITHUB_REF_NAME}"
+          else
+            tag="sha-${GITHUB_SHA::7}"
+          fi
+          echo "tag=${tag}" >> "$GITHUB_OUTPUT"
+          echo "Images will be tagged ${tag}"
+
+  build:
+    name: ${{ matrix.image }}
+    needs: tag
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - image: plane-backend
+            context: apps/api
+            dockerfile: apps/api/Dockerfile.api
+          - image: plane-frontend
+            context: .
+            dockerfile: apps/web/Dockerfile.web
+          - image: plane-space
+            context: .
+            dockerfile: apps/space/Dockerfile.space
+          - image: plane-admin
+            context: .
+            dockerfile: apps/admin/Dockerfile.admin
+          - image: plane-live
+            context: .
+            dockerfile: apps/live/Dockerfile.live
+    env:
+      IMAGE: ghcr.io/hobops/${{ matrix.image }}:${{ needs.tag.outputs.tag }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+
+      - name: Log in to GHCR
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: ${{ matrix.context }}
+          file: ${{ matrix.dockerfile }}
+          platforms: linux/amd64
+          push: true
+          provenance: false
+          tags: ${{ env.IMAGE }}
+          # The source code offer of AGPL-3.0 section 13 (see FORK.md).
+          labels: |
+            org.opencontainers.image.source=https://github.com/HobOps/plane
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.version=${{ needs.tag.outputs.tag }}
+            org.opencontainers.image.licenses=AGPL-3.0-only
+            org.opencontainers.image.title=${{ matrix.image }}
+          cache-from: type=gha,scope=${{ matrix.image }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.image }}
+
+      - name: Check the labels
+        run: |
+          labels="$(docker buildx imagetools inspect "${IMAGE}" --format '{{json .Image.Config.Labels}}')"
+          echo "${labels}"
+          echo "${labels}" | jq -e --arg rev "${GITHUB_SHA}" '
+            .["org.opencontainers.image.source"] == "https://github.com/HobOps/plane"
+            and .["org.opencontainers.image.revision"] == $rev'
+
+      - name: Check that the web app links to this repository
+        if: matrix.image == 'plane-frontend'
+        run: |
+          docker pull --quiet "${IMAGE}"
+          docker run --rm --entrypoint grep "${IMAGE}" -rlF "https://github.com/HobOps/plane" /usr/share/nginx/html
