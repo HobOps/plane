@@ -29,7 +29,7 @@ repository are upstream's and describe upstream's product.
    request that changes an upstream file without a ledger entry is not merged.
 5. **The worklog API is pinned by contract tests.** Clients written against Plane Cloud's worklog API
    must keep working: same routes (`issues/<id>/worklogs/`, `work-items/<id>/worklogs/` and
-   `total-worklogs/`) and same fields.
+   `total-worklogs/`) and same fields. See [Worklog API](#worklog-api).
 6. **No secrets and no real data.** This repository is public. Fixtures reproduce the shape of real
    API responses, never their content.
 
@@ -111,7 +111,7 @@ git grep -n "Fork (see FORK.md)"
 | File | Why | Pull request |
 | --- | --- | --- |
 | `apps/api/plane/settings/common.py` | Registers the fork's Django app, `plane.ext`. | #2 |
-| `apps/api/plane/urls.py` | Mounts the fork's routes, `plane.ext.urls`, under `api/`. | #2 |
+| `apps/api/plane/urls.py` | Mounts the fork's routes: the session API (`plane.ext.urls`) under `api/` and the public worklog API (`plane.ext.api.urls`) under `api/v1/`. | #2, #6 |
 | `apps/api/plane/bgtasks/issue_activities_task.py` | Worklog activity: handlers for created, updated and deleted entries, and their keys in the activity mapper. | #2 |
 | `apps/api/plane/app/views/issue/activity.py` | Hides worklog activity from project guests in the issue history. Also carries upstream's fix [c23728e](https://github.com/makeplane/plane/commit/c23728e769ac9f6f475b75c02ee8f73adce88a67) (makeplane/plane#9899): in v1.4.3 the history without `activity_type` returns 500. Drop that block at the first release that includes it. | #2 |
 | `apps/api/plane/tests/contract/app/test_issue_history_app.py` | Not in v1.4.3: upstream's regression test for that fix, added by the same cherry-pick. Drop it with the fix. | #2 |
@@ -166,6 +166,33 @@ kept.
 | `apps/web/ce/components/issues/worklog/`: `activity/root.tsx`, `activity/worklog-create-button.tsx`, `property/root.tsx` and `worklog-modal.tsx` | Same paths. | [13](https://github.com/szymczag/hangar/pull/13) |
 | `apps/web/ce/helpers/worklog.ts`, `apps/web/ce/hooks/use-worklogs.ts`, `apps/web/ce/services/worklog.service.ts` and `apps/web/ce/types/worklog.ts` | Same paths. | [13](https://github.com/szymczag/hangar/pull/13) |
 | `apps/web/ce/components/projects/settings/features-list.tsx` | Same path. It wraps upstream's features list and adds the time tracking toggle, so it carries upstream's header, as in Hangar. A remark about Hangar's epics is removed from its opening comment. | [13](https://github.com/szymczag/hangar/pull/13) |
+
+## Worklog API
+
+The public API (`/api/v1/`, with an API key) serves worklogs with Plane Cloud's routes, fields and
+responses, so a client written for Cloud, such as Plane's MCP server, only changes the host and the
+key. Authentication and the per-key rate limit are upstream's. The contract tests in
+`apps/api/plane/tests/contract/api/test_worklog_api.py` pin it.
+
+| Route, under `/api/v1/workspaces/<slug>/projects/<project_id>/` | Methods |
+| --- | --- |
+| `issues/<issue_id>/worklogs/` and `work-items/<issue_id>/worklogs/` | `GET`: a list, newest first. `POST`: 201. |
+| `issues/<issue_id>/worklogs/<id>/` and `work-items/<issue_id>/worklogs/<id>/` | `PATCH`: 200. `DELETE`: 204. |
+| `total-worklogs/` | `GET`: a list of `issue_id` and `duration`, one per work item with worklogs, sorted by `issue_id`. |
+
+An entry has Cloud's fields in Cloud's order: `id`, `created_at`, `updated_at`, `description`,
+`duration`, `logged_at`, `created_by`, `updated_by`, `project_id`, `workspace_id` and `logged_by`.
+As in Cloud:
+
+- A `POST` without `logged_at` gets the day at 12:00 UTC, and one without `duration` gets 0 minutes.
+- A negative duration is a 400, a project without time tracking a 404 and a work item that is not in
+  the project a 403, with Cloud's messages.
+
+Permissions are the session API's: project admins and members read and log time, guests and
+non-members get a 403, and only the author or an admin changes or deletes an entry.
+
+One difference from Cloud is deliberate: an entry cannot exceed 1,440 minutes, while Cloud accepts
+longer ones. No Cloud entry is longer than 844 minutes.
 
 ## Source code offer
 
