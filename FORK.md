@@ -39,7 +39,6 @@ repository are upstream's and describe upstream's product.
 | `hobops/v<upstream>`, today `hobops/v1.4.3` | The work branch for one upstream release: the upstream tag plus the fork's commits. The newest one is the default branch. |
 | `v<upstream>`, today `v1.4.3` | The upstream release tag, pushed here unchanged. It is the base of the work branch. |
 | `v<upstream>-hobops.N`, first `v1.4.3-hobops.1` | A fork release, cut from the work branch. Container images carry the same tag. |
-| `preview` | A frozen copy of upstream's default branch, left over from creating the fork. It is not used or updated, and nothing is based on it. |
 
 The fork's whole diff is always one command away:
 
@@ -125,6 +124,7 @@ git grep -n "Fork (see FORK.md)"
 | `apps/web/core/store/issue/issue-details/activity.store.ts` | Gives worklog activity its own activity type. | #2 |
 | `packages/constants/src/issue/filter.ts` | The `WORKLOG` activity filter, selected by default. | #2 |
 | `packages/types/src/project/projects.ts` | `is_time_tracking_enabled` in `IProject`. | #2 |
+| `apps/web/app/(all)/[workspaceSlug]/(projects)/star-us-link.tsx` | The GitHub link points to this repository instead of upstream's: the [source code offer](#source-code-offer). | #4 |
 | `.github/workflows/` | Removed: all of upstream's workflows. In v1.4.3 they are `build-branch`, `check-version`, `codeql`, `copyright-check`, `feature-deployment`, `i18n-sync-check`, `pull-request-build-lint-api`, `pull-request-build-lint-web-apps` and `react-doctor`. The fork's own `ci.yml` and `images.yml` are not upstream files. See [GitHub Actions](#github-actions). | #3 |
 
 Files that the fork adds are not upstream files and are not listed: this file, the
@@ -173,22 +173,26 @@ version that runs on a network are offered its source code.
 
 - **This public repository is that offer.** Every build that runs on the HobOps instance is built from
   a `v<upstream>-hobops.N` tag of this repository.
-- **The instance must point here.** From the first fork release on, the web app's link to upstream's
-  repository (`apps/web/app/(all)/[workspaceSlug]/(projects)/star-us-link.tsx` in v1.4.3) points to
-  this repository, and the images are labeled with the repository URL and the commit they were built
-  from (`org.opencontainers.image.source` and `org.opencontainers.image.revision`). That change
-  belongs to the first fork release and gets its ledger entry.
-- Until that release the instance runs upstream's images, unmodified.
+- **The instance points here.** The web app's GitHub link
+  (`apps/web/app/(all)/[workspaceSlug]/(projects)/star-us-link.tsx`) points to this repository, and
+  `images.yml` labels every image with the repository URL and the commit it was built from
+  (`org.opencontainers.image.source` and `org.opencontainers.image.revision`). The workflow checks
+  both the labels and the link before it finishes.
+- Until the first fork release is deployed, the instance runs upstream's images, unmodified.
 
 ## GitHub Actions
 
 Upstream's workflows come with the code (9 of them in v1.4.3) and are written for upstream's branches,
-registries and infrastructure. None of them may run here, so they are neutralized twice:
+registries and infrastructure. None of them may run here:
 
 - **Removed from the work branch**, with their ledger entry. Check again on every version bump: a new
   upstream release can bring new workflows, and they go before the bump is merged.
-- **Disabled one by one in the repository settings**, so the copies on the frozen `preview` branch
-  cannot run either. They were disabled before Actions was enabled.
+- **Not kept on any other branch.** The `preview` branch left over from creating the fork still carried
+  them, so it was deleted on 2026-11-07; it was identical to upstream's `preview` at `618d0eb`. They
+  had been disabled one by one before Actions was enabled, but GitHub forgets that setting once a
+  workflow file leaves the default branch.
+- **Blocked by the Actions settings.** Only GitHub's actions and `docker/*` are allowed, and only
+  pinned to a commit. Upstream's workflows pin their actions to tags.
 
 The fork's own workflows run on GitHub-hosted runners; HobOps' self-hosted runners are for private
 repositories only. The default `GITHUB_TOKEN` is read-only, a job that needs more asks for it, and
