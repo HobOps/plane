@@ -55,12 +55,23 @@ It is also at <https://github.com/HobOps/plane/compare/v1.4.3...hobops/v1.4.3>.
 The ruleset `hobops-release-branches` applies to every `hobops/*` branch and nobody bypasses it,
 administrators included:
 
-- Changes arrive through pull requests. No approvals are required today; the fork's CI checks become
-  required when its workflows exist.
+- Changes arrive through pull requests. No approvals are required, but the `api` and `web` checks of
+  [`ci.yml`](#github-actions) are: they must pass on the pull request.
 - Pull requests are merged with **squash** or **rebase**. Merge commits are disabled, so the fork's
   commits stay a linear series on top of the upstream tag.
 - No force-pushes and no branch deletion. Old work branches stay: earlier releases were built from
   them.
+
+Three things GitHub does that are easy to miss:
+
+- **A rebase merge drops the signatures.** GitHub recreates each commit with the person who merged as
+  committer, unsigned. The signed originals stay in the pull request, under `refs/pull/<number>/head`.
+- **Pushing an open pull request's head commit straight to its base branch merges it.** GitHub accepts
+  the push and marks the pull request as merged, because the commit already satisfies the rules. Merge
+  with the button instead, so the merge method is the one the rules allow.
+- **"Sync fork" is not how this fork follows upstream.** It offers to merge upstream's default branch,
+  `preview`, which runs ahead of the releases. New upstream releases come in as described in
+  [Moving to a new upstream release](#moving-to-a-new-upstream-release).
 
 GitHub's "require linear history" rule is deliberately not used. Upstream's release tags point at
 merge commits (`v1.4.3` does), so that rule rejects creating a work branch at a tag.
@@ -114,6 +125,7 @@ git grep -n "Fork (see FORK.md)"
 | `apps/web/core/store/issue/issue-details/activity.store.ts` | Gives worklog activity its own activity type. | #2 |
 | `packages/constants/src/issue/filter.ts` | The `WORKLOG` activity filter, selected by default. | #2 |
 | `packages/types/src/project/projects.ts` | `is_time_tracking_enabled` in `IProject`. | #2 |
+| `.github/workflows/` | Removed: all of upstream's workflows. In v1.4.3 they are `build-branch`, `check-version`, `codeql`, `copyright-check`, `feature-deployment`, `i18n-sync-check`, `pull-request-build-lint-api`, `pull-request-build-lint-web-apps` and `react-doctor`. The fork's own `ci.yml` and `images.yml` are not upstream files. See [GitHub Actions](#github-actions). | #3 |
 
 Files that the fork adds are not upstream files and are not listed: this file, the
 `apps/api/plane/ext/` app, and the fork's own frontend files and tests.
@@ -170,18 +182,22 @@ version that runs on a network are offered its source code.
 
 ## GitHub Actions
 
-Actions is disabled for the whole repository. Upstream's workflows come with the code (9 of them in
-v1.4.3) and are written for upstream's branches, registries and infrastructure. None of them may run
-here.
+Upstream's workflows come with the code (9 of them in v1.4.3) and are written for upstream's branches,
+registries and infrastructure. None of them may run here, so they are neutralized twice:
 
-The fork's own workflows (tests, builds and image publishing) arrive with the first fork release.
-Before Actions is enabled:
+- **Removed from the work branch**, with their ledger entry. Check again on every version bump: a new
+  upstream release can bring new workflows, and they go before the bump is merged.
+- **Disabled one by one in the repository settings**, so the copies on the frozen `preview` branch
+  cannot run either. They were disabled before Actions was enabled.
 
-- Upstream's workflows are neutralized: removed from the work branch, with their ledger entry, or
-  disabled one by one. This is checked again on every version bump, because a new upstream release
-  can bring new workflows.
-- The fork's workflows use GitHub-hosted runners. HobOps' self-hosted runners are for private
-  repositories only.
+The fork's own workflows run on GitHub-hosted runners; HobOps' self-hosted runners are for private
+repositories only. The default `GITHUB_TOKEN` is read-only, a job that needs more asks for it, and
+every action is pinned to a commit.
+
+| Workflow | Runs on | What it does |
+| --- | --- | --- |
+| `ci.yml` | Pull requests to `hobops/*` and pushes to them | `api`: ruff on the Python files the fork adds or changes, the migrations check, `migrate` on an empty database and the whole backend suite, with Postgres, Valkey and RabbitMQ as services. `web`: lint and format of `web` and its packages, types of the four apps and the production build of `web`. The ruleset requires both jobs. |
+| `images.yml` | Tags `v*-hobops.*`, or by hand | Builds the five images, `plane-backend`, `plane-frontend`, `plane-space`, `plane-admin` and `plane-live`, from the commit and pushes them to `ghcr.io/hobops`, all with the same tag and with the labels of the [source code offer](#source-code-offer). A tag publishes that release; a run by hand publishes `sha-<commit>`. |
 
 ## Conventions
 
