@@ -26,8 +26,9 @@ class Migration(migrations.Migration):
                 ('updated_at', models.DateTimeField(auto_now=True, verbose_name='Last Modified At')),
                 ('deleted_at', models.DateTimeField(blank=True, null=True, verbose_name='Deleted At')),
                 ('id', models.UUIDField(db_index=True, default=uuid.uuid4, editable=False, primary_key=True, serialize=False, unique=True)),
-                ('duration', models.PositiveIntegerField(help_text='Logged time in minutes', validators=[django.core.validators.MinValueValidator(1), django.core.validators.MaxValueValidator(1440)])),
+                ('duration', models.PositiveIntegerField(help_text='Logged time in minutes', validators=[django.core.validators.MinValueValidator(0), django.core.validators.MaxValueValidator(1440)])),
                 ('description', models.TextField(blank=True, max_length=5000)),
+                ('logged_at', models.DateTimeField(blank=True, help_text='When the work was done. Null when unknown: entries from before Plane Cloud added the field.', null=True)),
                 ('created_by', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='%(class)s_created_by', to=settings.AUTH_USER_MODEL, verbose_name='Created By')),
                 ('issue', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='worklogs', to='db.issue')),
                 ('logged_by', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='worklogs', to=settings.AUTH_USER_MODEL)),
@@ -46,7 +47,7 @@ class Migration(migrations.Migration):
         migrations.AddConstraint(
             model_name="issueworklog",
             constraint=models.CheckConstraint(
-                check=models.Q(("duration__gte", 1), ("duration__lte", 1440)),
+                check=models.Q(("duration__gte", 0), ("duration__lte", 1440)),
                 name="ext_issue_worklog_duration_range",
             ),
         ),

@@ -2,12 +2,15 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # See the LICENSE file for details.
 
+import json
 from uuid import uuid4
 
 import pytest
+from django.db import IntegrityError, transaction
 from rest_framework import status
 from rest_framework.test import APIClient
 
+from plane.bgtasks.issue_activities_task import create_worklog_activity
 from plane.db.models import Issue, IssueActivity, IssueComment, Project, ProjectMember, State, User, WorkspaceMember
 
 from plane.ext.models import IssueWorkLog
@@ -91,7 +94,8 @@ class TestWorklogCRUD:
 
     @pytest.mark.django_db
     def test_duration_bounds(self, session_client, workspace, project, issue):
-        for bad in (0, 24 * 60 + 1, -5):
+        # HobOps: 0 minutes is valid in this fork (see TestWorklogCloudData).
+        for bad in (24 * 60 + 1, -5):
             response = session_client.post(
                 worklogs_url(workspace, project, issue), {"duration": bad}, format="json"
             )
@@ -318,3 +322,70 @@ class TestWorklogOwnership:
         )
         assert response.status_code in (status.HTTP_403_FORBIDDEN, status.HTTP_404_NOT_FOUND)
         assert IssueWorkLog.objects.filter(pk=created["id"]).exists()
+
+
+# HobOps (see FORK.md): what the model accepts so that Plane Cloud's data fits. Cloud
+# has 0-minute entries, and a logged_at field that is null on entries older than
+# 2026-11-03. The 1,440-minute cap stays.
+@pytest.mark.contract
+class TestWorklogCloudData:
+    @pytest.mark.django_db
+    def test_zero_minutes_is_valid(self, session_client, workspace, project, issue):
+        url = worklogs_url(workspace, project, issue)
+        response = session_client.post(url, {"duration": 0}, format="json")
+        assert response.status_code == status.HTTP_201_CREATED, response.data
+        assert response.data["duration"] == 0
+
+        listing = session_client.get(url)
+        assert listing.status_code == status.HTTP_200_OK
+        assert listing.data["total_duration"] == 0
+        assert len(listing.data["worklogs"]) == 1
+
+    @pytest.mark.django_db
+    def test_negative_and_over_a_day_are_rejected(self, session_client, workspace, project, issue):
+        for bad in (-1, 24 * 60 + 1):
+            response = session_client.post(worklogs_url(workspace, project, issue), {"duration": bad}, format="json")
+            assert response.status_code == status.HTTP_400_BAD_REQUEST, bad
+
+    @pytest.mark.django_db
+    def test_logged_at_is_optional(self, session_client, workspace, project, issue):
+        response = session_client.post(worklogs_url(workspace, project, issue), {"duration": 30}, format="json")
+        assert response.status_code == status.HTTP_201_CREATED, response.data
+        assert response.data["logged_at"] is None
+
+    @pytest.mark.django_db
+    def test_logged_at_round_trips_and_can_be_cleared(self, session_client, workspace, project, issue):
+        url = worklogs_url(workspace, project, issue)
+        created = session_client.post(url, {"duration": 45, "logged_at": "2026-10-04T12:00:00Z"}, format="json")
+        assert created.status_code == status.HTTP_201_CREATED, created.data
+        assert created.data["logged_at"] == "2026-10-04T12:00:00Z"
+
+        cleared = session_client.patch(f"{url}{created.data['id']}/", {"logged_at": None}, format="json")
+        assert cleared.status_code == status.HTTP_200_OK, cleared.data
+        assert cleared.data["logged_at"] is None
+        assert IssueWorkLog.objects.get(pk=created.data["id"]).logged_at is None
+
+    @pytest.mark.django_db
+    def test_database_enforces_the_range(self, workspace, project, issue, create_user):
+        fields = {"issue": issue, "project": project, "workspace": workspace, "logged_by": create_user}
+        IssueWorkLog.objects.create(duration=0, **fields)
+        with pytest.raises(IntegrityError), transaction.atomic():
+            IssueWorkLog.objects.create(duration=24 * 60 + 1, **fields)
+
+    @pytest.mark.django_db
+    def test_zero_minute_entry_reads_well_in_the_activity(self, workspace, project, issue, create_user):
+        activities = []
+        create_worklog_activity(
+            requested_data=json.dumps({"duration": 0}),
+            current_instance=None,
+            issue_id=issue.id,
+            project_id=project.id,
+            actor_id=create_user.id,
+            workspace_id=workspace.id,
+            issue_activities=activities,
+            epoch=0,
+        )
+        assert len(activities) == 1
+        assert activities[0].field == "worklog"
+        assert activities[0].comment == "logged time"
+        assert activities[0].new_value == "0m"
