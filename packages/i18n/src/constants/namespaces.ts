@@ -33,6 +33,8 @@ export const NAMESPACES = [
   "workflow",
   "workspace",
   "workspace-settings",
+  // Fork (see FORK.md): the fork's worklog strings
+  "worklog",
 ] as const;
 
 export type TNamespace = (typeof NAMESPACES)[number];

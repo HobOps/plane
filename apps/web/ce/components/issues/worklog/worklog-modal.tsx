@@ -22,8 +22,12 @@ import { useUser, useUserPermissions } from "@/hooks/store/user";
 import {
   MAX_WORKLOG_DESCRIPTION_LENGTH,
   MAX_WORKLOG_MINUTES,
+  dateFromLoggedAt,
   formatWorklogDuration,
+  isValidWorkDate,
+  loggedAtFromDate,
   parseWorklogDuration,
+  todayISODate,
 } from "@/plane-web/helpers/worklog";
 import { useWorklogs } from "@/plane-web/hooks/use-worklogs";
 import { worklogService } from "@/plane-web/services/worklog.service";
@@ -52,11 +56,14 @@ export const WorklogModal = observer(function WorklogModal(props: TWorklogModal)
   // state — add form
   const [durationInput, setDurationInput] = useState("");
   const [description, setDescription] = useState("");
+  // HobOps: the date of the work, today unless picked
+  const [workDate, setWorkDate] = useState(todayISODate);
   const [isSubmitting, setIsSubmitting] = useState(false);
   // state — inline edit
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editDurationInput, setEditDurationInput] = useState("");
   const [editDescription, setEditDescription] = useState("");
+  const [editWorkDate, setEditWorkDate] = useState("");
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   // store hooks
   const { data: currentUser } = useUser();
@@ -84,6 +91,7 @@ export const WorklogModal = observer(function WorklogModal(props: TWorklogModal)
   const handleClose = () => {
     setDurationInput("");
     setDescription("");
+    setWorkDate(todayISODate());
     setEditingId(null);
     setPendingDeleteId(null);
     onClose();
@@ -94,8 +102,16 @@ export const WorklogModal = observer(function WorklogModal(props: TWorklogModal)
     if (minutes === null) {
       setToast({
         type: TOAST_TYPE.ERROR,
-        title: "Invalid duration",
-        message: 'Use a format like "2h 30m", "45m" or plain minutes, up to 24h.',
+        title: t("worklog.invalid_duration_title"),
+        message: t("worklog.invalid_duration_message"),
+      });
+      return;
+    }
+    if (!isValidWorkDate(workDate)) {
+      setToast({
+        type: TOAST_TYPE.ERROR,
+        title: t("worklog.invalid_date_title"),
+        message: t("worklog.invalid_date_message"),
       });
       return;
     }
@@ -104,13 +120,14 @@ export const WorklogModal = observer(function WorklogModal(props: TWorklogModal)
       await worklogService.createWorklog(workspaceSlug, projectId, issueId, {
         duration: minutes,
         description: description.trim(),
+        logged_at: loggedAtFromDate(workDate),
       });
       setDurationInput("");
       setDescription("");
       await refresh();
     } catch (error) {
       console.error(error);
-      setToast({ type: TOAST_TYPE.ERROR, title: "Error!", message: "Failed to log time." });
+      setToast({ type: TOAST_TYPE.ERROR, title: t("worklog.error_title"), message: t("worklog.create_failed") });
     } finally {
       setIsSubmitting(false);
     }
@@ -120,6 +137,7 @@ export const WorklogModal = observer(function WorklogModal(props: TWorklogModal)
     setEditingId(worklog.id);
     setEditDurationInput(formatWorklogDuration(worklog.duration));
     setEditDescription(worklog.description ?? "");
+    setEditWorkDate(dateFromLoggedAt(worklog.logged_at) ?? dateFromLoggedAt(worklog.created_at) ?? todayISODate());
   };
 
   const handleUpdate = async (worklogId: string) => {
@@ -127,8 +145,16 @@ export const WorklogModal = observer(function WorklogModal(props: TWorklogModal)
     if (minutes === null) {
       setToast({
         type: TOAST_TYPE.ERROR,
-        title: "Invalid duration",
-        message: 'Use a format like "2h 30m", "45m" or plain minutes, up to 24h.',
+        title: t("worklog.invalid_duration_title"),
+        message: t("worklog.invalid_duration_message"),
+      });
+      return;
+    }
+    if (!isValidWorkDate(editWorkDate)) {
+      setToast({
+        type: TOAST_TYPE.ERROR,
+        title: t("worklog.invalid_date_title"),
+        message: t("worklog.invalid_date_message"),
       });
       return;
     }
@@ -137,12 +163,13 @@ export const WorklogModal = observer(function WorklogModal(props: TWorklogModal)
       await worklogService.updateWorklog(workspaceSlug, projectId, issueId, worklogId, {
         duration: minutes,
         description: editDescription.trim(),
+        logged_at: loggedAtFromDate(editWorkDate),
       });
       setEditingId(null);
       await refresh();
     } catch (error) {
       console.error(error);
-      setToast({ type: TOAST_TYPE.ERROR, title: "Error!", message: "Failed to update the entry." });
+      setToast({ type: TOAST_TYPE.ERROR, title: t("worklog.error_title"), message: t("worklog.update_failed") });
     } finally {
       setIsSubmitting(false);
     }
@@ -156,7 +183,7 @@ export const WorklogModal = observer(function WorklogModal(props: TWorklogModal)
       await refresh();
     } catch (error) {
       console.error(error);
-      setToast({ type: TOAST_TYPE.ERROR, title: "Error!", message: "Failed to delete the entry." });
+      setToast({ type: TOAST_TYPE.ERROR, title: t("worklog.error_title"), message: t("worklog.delete_failed") });
     } finally {
       setIsSubmitting(false);
     }
@@ -169,8 +196,8 @@ export const WorklogModal = observer(function WorklogModal(props: TWorklogModal)
         handleClose={() => setPendingDeleteId(null)}
         handleSubmit={() => pendingDeleteId && void handleDelete(pendingDeleteId)}
         isSubmitting={isSubmitting}
-        title="Delete worklog"
-        content="Are you sure you want to delete this time entry? This action cannot be undone."
+        title={t("worklog.delete_title")}
+        content={t("worklog.delete_content")}
       />
       <ModalCore isOpen={isOpen} handleClose={handleClose} position={EModalPosition.TOP} width={EModalWidth.XL}>
         <div className="space-y-4 p-5">
@@ -187,18 +214,27 @@ export const WorklogModal = observer(function WorklogModal(props: TWorklogModal)
               <Input
                 value={durationInput}
                 onChange={(e) => setDurationInput(e.target.value)}
-                placeholder="2h 30m"
+                placeholder={t("worklog.duration_placeholder")}
                 className="w-28"
+              />
+              <Input
+                type="date"
+                value={workDate}
+                max={todayISODate()}
+                onChange={(e) => setWorkDate(e.target.value)}
+                aria-label={t("worklog.work_date")}
+                title={t("worklog.work_date")}
+                className="w-40"
               />
               <Input
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="What was done? (optional)"
+                placeholder={t("worklog.description_placeholder")}
                 maxLength={MAX_WORKLOG_DESCRIPTION_LENGTH}
                 className="grow"
               />
               <Button variant="primary" size="sm" onClick={handleCreate} loading={isSubmitting} disabled={isSubmitting}>
-                Log time
+                {t("worklog.log_time")}
               </Button>
             </div>
           )}
@@ -220,13 +256,22 @@ export const WorklogModal = observer(function WorklogModal(props: TWorklogModal)
                       <Input
                         value={editDurationInput}
                         onChange={(e) => setEditDurationInput(e.target.value)}
-                        placeholder="2h 30m"
+                        placeholder={t("worklog.duration_placeholder")}
                         className="w-28"
+                      />
+                      <Input
+                        type="date"
+                        value={editWorkDate}
+                        max={todayISODate()}
+                        onChange={(e) => setEditWorkDate(e.target.value)}
+                        aria-label={t("worklog.work_date")}
+                        title={t("worklog.work_date")}
+                        className="w-40"
                       />
                       <Input
                         value={editDescription}
                         onChange={(e) => setEditDescription(e.target.value)}
-                        placeholder="What was done? (optional)"
+                        placeholder={t("worklog.description_placeholder")}
                         maxLength={MAX_WORKLOG_DESCRIPTION_LENGTH}
                         className="grow"
                       />
@@ -237,10 +282,10 @@ export const WorklogModal = observer(function WorklogModal(props: TWorklogModal)
                         loading={isSubmitting}
                         disabled={isSubmitting}
                       >
-                        Save
+                        {t("worklog.save")}
                       </Button>
                       <Button variant="secondary" size="sm" onClick={() => setEditingId(null)} disabled={isSubmitting}>
-                        Cancel
+                        {t("worklog.cancel")}
                       </Button>
                     </>
                   ) : (
@@ -250,7 +295,7 @@ export const WorklogModal = observer(function WorklogModal(props: TWorklogModal)
                       </span>
                       <span className="grow truncate text-secondary">{worklog.description}</span>
                       <span className="text-xs shrink-0 text-tertiary">
-                        {author?.display_name ?? "—"} · {renderFormattedDate(worklog.created_at)}
+                        {author?.display_name ?? "—"} · {renderFormattedDate(worklog.logged_at ?? worklog.created_at)}
                       </span>
                       {canModify(worklog) && (
                         <span className="flex shrink-0 items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
@@ -259,7 +304,7 @@ export const WorklogModal = observer(function WorklogModal(props: TWorklogModal)
                             onClick={() => startEditing(worklog)}
                             disabled={isSubmitting}
                             className="rounded p-1 text-tertiary hover:bg-layer-1 hover:text-primary"
-                            aria-label="Edit worklog"
+                            aria-label={t("worklog.edit")}
                           >
                             <Pencil className="h-3.5 w-3.5" />
                           </button>
@@ -268,7 +313,7 @@ export const WorklogModal = observer(function WorklogModal(props: TWorklogModal)
                             onClick={() => setPendingDeleteId(worklog.id)}
                             disabled={isSubmitting}
                             className="rounded p-1 text-tertiary hover:bg-layer-1 hover:text-danger-primary"
-                            aria-label="Delete worklog"
+                            aria-label={t("worklog.delete")}
                           >
                             <Trash2 className="h-3.5 w-3.5" />
                           </button>
@@ -283,7 +328,7 @@ export const WorklogModal = observer(function WorklogModal(props: TWorklogModal)
 
           <div className="flex justify-end">
             <Button variant="secondary" size="sm" onClick={handleClose}>
-              Close
+              {t("worklog.close")}
             </Button>
           </div>
         </div>
