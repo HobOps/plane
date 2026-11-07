@@ -11,7 +11,8 @@ import { IconButton } from "@makeplane/propel/components/icon-button";
 import { Github } from "@makeplane/propel/icons";
 import { useTranslation } from "@plane/i18n";
 
-const GITHUB_REPO_URL = "https://github.com/makeplane/plane";
+// Fork (see FORK.md): the source code offer of AGPL-3.0 section 13 points to this fork
+const GITHUB_REPO_URL = "https://github.com/HobOps/plane";
 
 export function StarUsOnGitHubLink() {
   // plane hooks
