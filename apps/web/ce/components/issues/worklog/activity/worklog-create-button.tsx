@@ -8,6 +8,7 @@ import { useState } from "react";
 import { observer } from "mobx-react";
 import { Timer } from "lucide-react";
 // plane imports
+import { useTranslation } from "@plane/i18n";
 import { Button } from "@plane/propel/button";
 // hooks
 import { useProject } from "@/hooks/store/use-project";
@@ -26,6 +27,8 @@ export const IssueActivityWorklogCreateButton = observer(function IssueActivityW
   props: TIssueActivityWorklogCreateButton
 ) {
   const { workspaceSlug, projectId, issueId, disabled, canViewWorklogs } = props;
+  // i18n
+  const { t } = useTranslation();
   // state
   const [isModalOpen, setIsModalOpen] = useState(false);
   // store hooks
@@ -44,7 +47,7 @@ export const IssueActivityWorklogCreateButton = observer(function IssueActivityW
         disabled={disabled}
         prependIcon={<Timer className="h-3.5 w-3.5" />}
       >
-        Log time
+        {t("worklog.log_time")}
       </Button>
       <WorklogModal
         isOpen={isModalOpen}

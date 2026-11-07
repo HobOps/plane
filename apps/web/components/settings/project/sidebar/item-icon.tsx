@@ -6,6 +6,8 @@
 
 import type { IconGlyph } from "@makeplane/propel/components/icon";
 import {
+  // Fork (see FORK.md): time tracking settings
+  ClockOutline,
   CyclesOutline,
   EstimateOutline,
   IntakeOutline,
@@ -35,4 +37,6 @@ export const PROJECT_SETTINGS_ICONS: Record<TProjectSettingsTabs, IconGlyph | Re
   labels: LabelsOutline,
   estimates: EstimateOutline,
   automations: TriggerOutline,
+  // Fork (see FORK.md): time tracking settings
+  features_time_tracking: ClockOutline,
 };

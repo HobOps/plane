@@ -1,0 +1,33 @@
+{
+  "worklog": {
+    "log_time": "Log time",
+    "duration_placeholder": "2h 30m",
+    "description_placeholder": "What was done? (optional)",
+    "work_date": "Date of the work",
+    "save": "Save",
+    "cancel": "Cancel",
+    "close": "Close",
+    "edit": "Edit worklog",
+    "delete": "Delete worklog",
+    "delete_title": "Delete worklog",
+    "delete_content": "Are you sure you want to delete this time entry? This action cannot be undone.",
+    "invalid_duration_title": "Invalid duration",
+    "invalid_duration_message": "Use a format like \"2h 30m\", \"45m\" or plain minutes, from 0 up to 24h.",
+    "invalid_date_title": "Invalid date",
+    "invalid_date_message": "Pick the date of the work. It cannot be in the future.",
+    "error_title": "Error!",
+    "create_failed": "Failed to log time.",
+    "update_failed": "Failed to update the entry.",
+    "delete_failed": "Failed to delete the entry.",
+    "toggle_success_title": "Success!",
+    "toggle_enabled": "Time tracking enabled for this project.",
+    "toggle_disabled": "Time tracking disabled for this project.",
+    "toggle_failed": "Failed to update the time tracking setting.",
+    "activity": {
+      "logged": "logged",
+      "updated_from": "updated logged time from",
+      "to": "to",
+      "removed": "removed logged time"
+    }
+  }
+}
