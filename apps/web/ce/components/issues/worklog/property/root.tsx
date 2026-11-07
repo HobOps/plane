@@ -48,7 +48,7 @@ export const IssueWorklogProperty = observer(function IssueWorklogProperty(props
           onClick={() => setIsModalOpen(true)}
           className="flex h-7.5 items-center rounded px-2 text-body-xs-regular text-secondary hover:bg-layer-1"
         >
-          {totalDuration > 0 ? formatWorklogDuration(totalDuration) : disabled ? "—" : "Log time"}
+          {totalDuration > 0 ? formatWorklogDuration(totalDuration) : disabled ? "—" : t("worklog.log_time")}
         </button>
       </SidebarPropertyListItem>
       <WorklogModal
