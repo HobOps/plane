@@ -14,6 +14,7 @@ class IssueWorkLogSerializer(serializers.ModelSerializer):
             "id",
             "duration",
             "description",
+            "logged_at",
             "logged_by",
             "issue",
             "project",
