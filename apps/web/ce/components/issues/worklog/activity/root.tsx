@@ -47,9 +47,8 @@ export const IssueActivityWorklog = observer(function IssueActivityWorklog(props
         </>
       ) : activity.verb === "updated" ? (
         <>
-          {t("worklog.activity.updated_from")}{" "}
-          <span className="font-medium text-primary">{activity.old_value}</span> {t("worklog.activity.to")}{" "}
-          <span className="font-medium text-primary">{activity.new_value}</span>
+          {t("worklog.activity.updated_from")} <span className="font-medium text-primary">{activity.old_value}</span>{" "}
+          {t("worklog.activity.to")} <span className="font-medium text-primary">{activity.new_value}</span>
         </>
       ) : (
         <>
