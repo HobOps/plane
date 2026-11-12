@@ -3,7 +3,7 @@
 # See the LICENSE file for details.
 
 # Builds the five images of the fork from this repository and pushes them to
-# ghcr.io/hobops (see FORK.md). Pushing a tag v<upstream>-hobops.N publishes that
+# HobOps' private registry, registry.hobops.io/hobops (Harbor; see FORK.md). Pushing a tag v<upstream>-hobops.N publishes that
 # release with the same tag. Running the workflow by hand on a branch publishes
 # its head as sha-<commit>, to try a build without cutting a release.
 name: images
@@ -45,7 +45,6 @@ jobs:
     timeout-minutes: 60
     permissions:
       contents: read
-      packages: write
     strategy:
       fail-fast: false
       matrix:
@@ -66,7 +65,7 @@ jobs:
             context: .
             dockerfile: apps/live/Dockerfile.live
     env:
-      IMAGE: ghcr.io/hobops/${{ matrix.image }}:${{ needs.tag.outputs.tag }}
+      IMAGE: registry.hobops.io/hobops/${{ matrix.image }}:${{ needs.tag.outputs.tag }}
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -76,12 +75,14 @@ jobs:
       - name: Set up Buildx
         uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
 
-      - name: Log in to GHCR
+      # robot$ci of Harbor: push and pull on the hobops project, managed in
+      # hobops-infrastructure/terraform/harbor.
+      - name: Log in to Harbor
         uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
         with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          registry: registry.hobops.io
+          username: ${{ secrets.HARBOR_USERNAME }}
+          password: ${{ secrets.HARBOR_PASSWORD }}
 
       - name: Build and push
         uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
