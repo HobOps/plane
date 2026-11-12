@@ -235,7 +235,7 @@ every action is pinned to a commit.
 | Workflow | Runs on | What it does |
 | --- | --- | --- |
 | `ci.yml` | Pull requests to `hobops/*` and pushes to them | `api`: ruff on the Python files the fork adds or changes, the migrations check, `migrate` on an empty database and the whole backend suite, with Postgres, Valkey and RabbitMQ as services. `web`: lint and format of `web` and its packages, types of the four apps and the production build of `web`. The ruleset requires both jobs. |
-| `images.yml` | Tags `v*-hobops.*`, or by hand | Builds the five images, `plane-backend`, `plane-frontend`, `plane-space`, `plane-admin` and `plane-live`, from the commit and pushes them to `ghcr.io/hobops`, all with the same tag and with the labels of the [source code offer](#source-code-offer). A tag publishes that release; a run by hand publishes `sha-<commit>`. |
+| `images.yml` | Tags `v*-hobops.*`, or by hand | Builds the five images, `plane-backend`, `plane-frontend`, `plane-space`, `plane-admin` and `plane-live`, from the commit and pushes them to HobOps' private registry, `registry.hobops.io/hobops` (Harbor, with the `HARBOR_USERNAME` and `HARBOR_PASSWORD` repository secrets), all with the same tag and with the labels of the [source code offer](#source-code-offer). A tag publishes that release; a run by hand publishes `sha-<commit>`. |
 
 ## Conventions
 
