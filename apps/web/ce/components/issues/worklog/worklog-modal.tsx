@@ -199,7 +199,14 @@ export const WorklogModal = observer(function WorklogModal(props: TWorklogModal)
         title={t("worklog.delete_title")}
         content={t("worklog.delete_content")}
       />
-      <ModalCore isOpen={isOpen} handleClose={handleClose} position={EModalPosition.TOP} width={EModalWidth.XL}>
+      {/* HobOps: while the delete confirmation is open, a click on it counts as a click outside this
+          modal; closing here would drop the pending delete. */}
+      <ModalCore
+        isOpen={isOpen}
+        handleClose={() => pendingDeleteId === null && handleClose()}
+        position={EModalPosition.TOP}
+        width={EModalWidth.XL}
+      >
         <div className="space-y-4 p-5">
           <div className="flex items-center justify-between">
             <h3 className="text-xl font-medium text-primary">{t("time_tracking")}</h3>
