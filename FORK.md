@@ -200,6 +200,31 @@ non-members get a 403, and only the author or an admin changes or deletes an ent
 One difference from Cloud is deliberate: an entry cannot exceed 1,440 minutes, while Cloud accepts
 longer ones. No Cloud entry is longer than 844 minutes.
 
+## Importing a Plane Cloud workspace
+
+`python manage.py import_cloud_backup <backup> --owner-email <email>` loads a Plane Cloud workspace
+from a backup taken through Cloud's API v1. It lives in the fork because the public API cannot do
+it: `created_by`, the dates and `sequence_id` are read-only there. Rows keep the id, number, author
+and dates they had in Cloud.
+
+- **Dry run by default.** The command imports inside a transaction, compares the result with the
+  backup (work items, highest number, worklog entries and minutes per project, authors) and rolls
+  back. `--commit` writes it. A mismatch always rolls back.
+- **It can be run again**, over the same instance or with a newer backup: rows are upserted by id.
+  A row edited in the instance since the previous run is overwritten with Cloud's version, so freeze
+  one side before a second run.
+- **Accounts.** A member the instance already has, with the same id, is reused; the command stops if
+  the id or the email belongs to someone else. Missing members are created without a password
+  (`reset_password` sets one). Authors who are no longer members get a placeholder account that
+  cannot sign in, so their work stays attributed.
+- **Files** go to the instance's storage under the key they had in Cloud (`--skip-files` leaves them).
+- **Not imported:** work item types, estimates, project cover images, subscribers, notifications and
+  reactions. Workspace-level (wiki) pages have no place in the community edition:
+  `--wiki-project <IDENTIFIER>` attaches them to a project.
+
+The backup is a tree with one JSON file per API v1 endpoint, as the command's docstring lists. The
+test in `apps/api/plane/tests/contract/app/test_import_cloud_backup.py` builds a small one.
+
 ## Source code offer
 
 Plane is licensed under AGPL-3.0-only. Section 13 of the license requires that the users of a modified
