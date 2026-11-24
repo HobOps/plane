@@ -6,4 +6,6 @@
 
 db: 0125_reset_project_deploy_board_identity
 
+ext: 0001_issue_worklog
+
 license: 0006_instance_is_current_version_deprecated
