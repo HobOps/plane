@@ -251,6 +251,33 @@ every action is pinned to a commit.
 | `ci.yml` | Pull requests to `hobops/*` and pushes to them | `api`: ruff on the Python files the fork adds or changes, the migrations check (models and lockfile), `migrate` on an empty database and the whole backend suite, with Postgres, Valkey and RabbitMQ as services. `web`: lint and format of `web` and its packages, types of the four apps and the production build of `web`. The ruleset requires both jobs. |
 | `images.yml` | Tags `v*-hobops.*`, or by hand | Builds the five images, `plane-backend`, `plane-frontend`, `plane-space`, `plane-admin` and `plane-live`, from the commit and pushes them to HobOps' private registry, `registry.hobops.io/hobops` (Harbor, with the `HARBOR_USERNAME` and `HARBOR_PASSWORD` repository secrets), all with the same tag and with the labels of the [source code offer](#source-code-offer). A tag publishes that release; a run by hand publishes `sha-<commit>`. |
 
+### Building the images without GitHub Actions
+
+Since 2026-11 Actions does not run on this repository, so `images.yml` cannot publish. The same five
+images are built by hand with BuildKit, straight from a pushed commit, so nothing local goes in:
+
+```sh
+buildctl build --frontend dockerfile.v0 \
+  --opt context=https://github.com/HobOps/plane.git#<full commit sha> \
+  --opt filename=apps/web/Dockerfile.web --opt platform=linux/amd64 \
+  --opt label:org.opencontainers.image.source=https://github.com/HobOps/plane \
+  --opt label:org.opencontainers.image.revision=<full commit sha> \
+  --opt label:org.opencontainers.image.version=<tag> \
+  --opt label:org.opencontainers.image.licenses=AGPL-3.0-only \
+  --opt label:org.opencontainers.image.title=plane-frontend \
+  --output type=image,name=registry.hobops.io/hobops/plane-frontend:<tag>,push=true
+```
+
+- One build per row of the matrix in `images.yml`. `plane-backend` takes the subdirectory as context
+  (`...#<sha>:apps/api`, `filename=Dockerfile.api`); the other four take the repository root.
+- The tag follows `images.yml`: the release tag, or `sha-<first 7 of the commit>` for anything else.
+- It runs unprivileged: the `moby/buildkit` rootless image with `buildctl-daemonless.sh` and
+  `BUILDKITD_FLAGS=--oci-worker-no-process-sandbox`, as a Kubernetes Job with seccomp and AppArmor
+  unconfined, and the registry credentials mounted as `~/.docker/config.json`. Each build needs about
+  2 CPUs and takes 5 to 15 minutes.
+- Without CI nothing checks a commit before it is built. Run by hand what `ci.yml` runs, and try the
+  images on a scratch instance before deploying them.
+
 ## Conventions
 
 - Commits are conventional commits (`type(scope): message`), in English.
