@@ -129,12 +129,12 @@ git grep -n "Fork (see FORK.md)"
 | `apps/api/plane/urls.py` | Mounts the fork's routes: the session API (`plane.ext.urls`) under `api/` and the public worklog API (`plane.ext.api.urls`) under `api/v1/`. | #2, #6 |
 | `apps/api/plane/bgtasks/issue_activities_task.py` | Worklog activity: handlers for created, updated and deleted entries, and their keys in the activity mapper. | #2 |
 | `apps/api/plane/app/views/issue/activity.py` | Hides worklog activity from project guests in the issue history. | #2 |
-| `apps/api/migrations_lockfile.txt` | Lists the fork's app, `ext`, with its latest migration. `makemigrations` writes the file and upstream's check compares it with the migration graph. | v1.5.0 bump |
+| `apps/api/migrations_lockfile.txt` | Lists the fork's app, `ext`, with its latest migration. `makemigrations` writes the file and upstream's check compares it with the migration graph. | #11 |
 | `apps/web/tsconfig.json` | The `@/plane-web/*` alias for the fork's frontend files in `apps/web/ce/`. | #2 |
-| `apps/web/components/issues/issue-detail/issue-activity/root.tsx` | The "Log time" button next to the activity tabs, who can see worklogs and log time, and worklog entries in the "Activity" tab. | #2, v1.5.0 bump |
+| `apps/web/components/issues/issue-detail/issue-activity/root.tsx` | The "Log time" button next to the activity tabs, who can see worklogs and log time, and worklog entries in the "Activity" tab. | #2, #11 |
 | `apps/web/components/issues/issue-detail/issue-activity/filter-root.tsx` | The worklog filter, shown only where worklogs can exist. The component becomes an observer. | #2 |
 | `apps/web/components/issues/issue-detail/issue-activity/activity-comment-root.tsx` | Renders worklog entries in the activity feed. | #2 |
-| `apps/web/components/issues/issue-detail/sidebar-sections.tsx` | The "Time Tracking" property of a work item. Upstream shares this component between the sidebar and the peek overview since v1.5.0; before, the fork changed `sidebar.tsx` and `peek-overview/properties.tsx`. | #2, v1.5.0 bump |
+| `apps/web/components/issues/issue-detail/sidebar-sections.tsx` | The "Time Tracking" property of a work item. Upstream shares this component between the sidebar and the peek overview since v1.5.0; before, the fork changed `sidebar.tsx` and `peek-overview/properties.tsx`. | #2, #11 |
 | `apps/web/components/project/project-feature-update.tsx` | Uses the fork's features list, which adds the time tracking toggle. | #2 |
 | `apps/web/store/issue/issue-details/activity.store.ts` | Gives worklog activity its own activity type. | #2 |
 | `packages/constants/src/issue/filter.ts` | The `WORKLOG` activity filter, selected by default. | #2 |
@@ -145,7 +145,7 @@ git grep -n "Fork (see FORK.md)"
 | `packages/constants/src/settings/project.ts` | That tab, under Features in the project settings. | #7 |
 | `apps/web/components/settings/project/sidebar/item-icon.tsx` | The icon of that tab. | #7 |
 | `apps/web/app/routes/core.ts` | The route of that tab's page. | #7 |
-| `.github/workflows/` | Removed: all of upstream's workflows. In v1.5.0 they are `build-branch`, `check-version`, `codeql`, `copyright-check`, `feature-deployment`, `i18n-sync-check`, `migration-check`, `pull-request-build-lint-api`, `pull-request-build-lint-web-apps` and `react-doctor`. The fork's own `ci.yml` and `images.yml` are not upstream files. See [GitHub Actions](#github-actions). | #3, v1.5.0 bump |
+| `.github/workflows/` | Removed: all of upstream's workflows. In v1.5.0 they are `build-branch`, `check-version`, `codeql`, `copyright-check`, `feature-deployment`, `i18n-sync-check`, `migration-check`, `pull-request-build-lint-api`, `pull-request-build-lint-web-apps` and `react-doctor`. The fork's own `ci.yml` and `images.yml` are not upstream files. See [GitHub Actions](#github-actions). | #3, #11 |
 
 Files that the fork adds are not upstream files and are not listed: this file, the
 `apps/api/plane/ext/` app, the fork's own frontend files (`apps/web/ce/`, the time tracking settings
