@@ -6,8 +6,8 @@
 
 import { useState } from "react";
 import { observer } from "mobx-react";
-import { Timer } from "lucide-react";
 // plane imports
+import { ClockOutline } from "@makeplane/propel/icons";
 import { useTranslation } from "@plane/i18n";
 // components
 import { SidebarPropertyListItem } from "@/components/common/layout/sidebar/property-list-item";
@@ -42,7 +42,7 @@ export const IssueWorklogProperty = observer(function IssueWorklogProperty(props
 
   return (
     <>
-      <SidebarPropertyListItem icon={Timer} label={t("time_tracking")}>
+      <SidebarPropertyListItem icon={ClockOutline} label={t("time_tracking")}>
         <button
           type="button"
           onClick={() => setIsModalOpen(true)}

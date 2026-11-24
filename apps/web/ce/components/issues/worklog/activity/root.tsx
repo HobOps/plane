@@ -5,8 +5,8 @@
  */
 
 import { observer } from "mobx-react";
-import { Timer } from "lucide-react";
 // plane imports
+import { ClockOutline } from "@makeplane/propel/icons";
 import { useTranslation } from "@plane/i18n";
 import type { TIssueActivityComment } from "@plane/types";
 // components
@@ -37,7 +37,7 @@ export const IssueActivityWorklog = observer(function IssueActivityWorklog(props
 
   return (
     <IssueActivityBlockComponent
-      icon={<Timer size={14} className="text-secondary" aria-hidden="true" />}
+      icon={<ClockOutline className="h-3.5 w-3.5 text-secondary" aria-hidden="true" />}
       activityId={activityComment.id}
       ends={ends}
     >

@@ -9,7 +9,7 @@ import uniq from "lodash-es/uniq";
 import { observer } from "mobx-react";
 // plane package imports
 import type { TActivityFilters } from "@plane/constants";
-import { E_SORT_ORDER, EActivityFilterType, EUserPermissions, defaultActivityFilters } from "@plane/constants";
+import { E_SORT_ORDER, EActivityFilterType, defaultActivityFilters } from "@plane/constants";
 import { useLocalStorage } from "@plane/hooks";
 // i18n
 import { useTranslation } from "@plane/i18n";

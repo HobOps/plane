@@ -6,10 +6,10 @@
 
 import { useState } from "react";
 import { observer } from "mobx-react";
-import { Timer } from "lucide-react";
 // plane imports
+import { Button } from "@makeplane/propel/components/button";
+import { ClockOutline } from "@makeplane/propel/icons";
 import { useTranslation } from "@plane/i18n";
-import { Button } from "@plane/propel/button";
 // hooks
 import { useProject } from "@/hooks/store/use-project";
 // plane web
@@ -43,12 +43,12 @@ export const IssueActivityWorklogCreateButton = observer(function IssueActivityW
       <Button
         variant="secondary"
         size="sm"
+        stretch="auto"
         onClick={() => setIsModalOpen(true)}
         disabled={disabled}
-        prependIcon={<Timer className="h-3.5 w-3.5" />}
-      >
-        {t("worklog.log_time")}
-      </Button>
+        icon={<ClockOutline className="h-3.5 w-3.5" />}
+        label={t("worklog.log_time")}
+      />
       <WorklogModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
