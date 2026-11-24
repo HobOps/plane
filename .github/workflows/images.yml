@@ -115,4 +115,4 @@ jobs:
         if: matrix.image == 'plane-frontend'
         run: |
           docker pull --quiet "${IMAGE}"
-          docker run --rm --entrypoint grep "${IMAGE}" -rlF "https://github.com/HobOps/plane" /usr/share/nginx/html
+          docker run --rm --entrypoint grep "${IMAGE}" -rlF "https://github.com/HobOps/plane" /usr/share/caddy/html
