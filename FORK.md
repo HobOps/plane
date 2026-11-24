@@ -37,18 +37,18 @@ repository are upstream's and describe upstream's product.
 
 | Ref | What it is |
 | --- | --- |
-| `hobops/v<upstream>`, today `hobops/v1.4.3` | The work branch for one upstream release: the upstream tag plus the fork's commits. The newest one is the default branch. |
-| `v<upstream>`, today `v1.4.3` | The upstream release tag, pushed here unchanged. It is the base of the work branch. |
+| `hobops/v<upstream>`, today `hobops/v1.5.0` | The work branch for one upstream release: the upstream tag plus the fork's commits. The newest one is the default branch. |
+| `v<upstream>`, today `v1.5.0` | The upstream release tag, pushed here unchanged. It is the base of the work branch. |
 | `v<upstream>-hobops.N`, first `v1.4.3-hobops.1` | A fork release, cut from the work branch. Container images carry the same tag. |
 
 The fork's whole diff is always one command away:
 
 ```sh
-git diff --stat v1.4.3..hobops/v1.4.3
-git log --oneline v1.4.3..hobops/v1.4.3
+git diff --stat v1.5.0..hobops/v1.5.0
+git log --oneline v1.5.0..hobops/v1.5.0
 ```
 
-It is also at <https://github.com/HobOps/plane/compare/v1.4.3...hobops/v1.4.3>.
+It is also at <https://github.com/HobOps/plane/compare/v1.5.0...hobops/v1.5.0>.
 
 ### Branch protection
 
@@ -74,30 +74,45 @@ Three things GitHub does that are easy to miss:
   [Moving to a new upstream release](#moving-to-a-new-upstream-release).
 
 GitHub's "require linear history" rule is deliberately not used. Upstream's release tags point at
-merge commits (`v1.4.3` does), so that rule rejects creating a work branch at a tag.
+merge commits (`v1.4.3` and `v1.5.0` do), so that rule rejects creating a work branch at a tag.
 
 ## Moving to a new upstream release
 
 ```sh
 git remote add upstream https://github.com/makeplane/plane.git    # once
-git fetch --no-tags upstream tag v1.4.4
+git fetch --no-tags upstream tag v1.5.1
 
 # 1. Publish the base: the upstream tag, unchanged, and a new work branch at it.
-git push origin refs/tags/v1.4.4
-git push origin 'v1.4.4^{commit}:refs/heads/hobops/v1.4.4'
+git push origin refs/tags/v1.5.1
+git push origin 'v1.5.1^{commit}:refs/heads/hobops/v1.5.1'
 
 # 2. Re-apply the fork's commits, oldest first, on a topic branch.
-git switch -c bump/v1.4.4 v1.4.4
-git cherry-pick v1.4.3..origin/hobops/v1.4.3
+git switch -c bump/v1.5.1 v1.5.1
+git -c merge.renameLimit=20000 cherry-pick -x v1.5.0..origin/hobops/v1.5.0
 ```
 
 3. Resolve the conflicts, walk the ledger to check that every entry still applies, and run the tests.
-4. Open a pull request from `bump/v1.4.4` into `hobops/v1.4.4` and merge it with **rebase**, so that
+4. Open a pull request from `bump/v1.5.1` into `hobops/v1.5.1` and merge it with **rebase**, so that
    each fork commit survives as its own commit.
-5. Make `hobops/v1.4.4` the default branch and tag the release `v1.4.4-hobops.1`.
+5. Make `hobops/v1.5.1` the default branch and tag the release `v1.5.1-hobops.1`.
 
-Step 1 is how `hobops/v1.4.3` was created. The other steps get their first real run with the next
-upstream release.
+This was first done in full for v1.5.0 (2026-11). What that move taught:
+
+- **Give git a high rename limit.** Upstream moved `apps/web/core/` up into `apps/web/`. With
+  `merge.renameLimit` raised, the cherry-picks follow most of the moved files; the ones it loses show
+  up as "deleted by us" and are re-applied by hand at the new path.
+- **Drop the backports the new release already has.** Skip those commits in the cherry-pick and remove
+  their ledger rows.
+- **The fork's own frontend files use upstream's component library**, and upstream replaces it from
+  time to time (v1.5.0 went from `@plane/ui` and `lucide-react` to `@makeplane/propel` and
+  `@plane/blocks`). `check:types` lists what to port; a sibling upstream component shows the new idiom.
+- **Prefer the place upstream now shares.** When upstream folds two modified files into one component,
+  move the fork's change there and drop the old rows (the sidebar and the peek overview became
+  `sidebar-sections.tsx`).
+- **New upstream guards apply to the fork too:** the migrations lockfile has to list the fork's app,
+  and new upstream workflows have to be removed.
+- **Read the release's migrations before deploying.** Database migrations are not reversible, and the
+  images of the previous release may not run on the migrated database.
 
 ## Upstream files modified by this fork
 
@@ -113,25 +128,24 @@ git grep -n "Fork (see FORK.md)"
 | `apps/api/plane/settings/common.py` | Registers the fork's Django app, `plane.ext`. | #2 |
 | `apps/api/plane/urls.py` | Mounts the fork's routes: the session API (`plane.ext.urls`) under `api/` and the public worklog API (`plane.ext.api.urls`) under `api/v1/`. | #2, #6 |
 | `apps/api/plane/bgtasks/issue_activities_task.py` | Worklog activity: handlers for created, updated and deleted entries, and their keys in the activity mapper. | #2 |
-| `apps/api/plane/app/views/issue/activity.py` | Hides worklog activity from project guests in the issue history. Also carries upstream's fix [c23728e](https://github.com/makeplane/plane/commit/c23728e769ac9f6f475b75c02ee8f73adce88a67) (makeplane/plane#9899): in v1.4.3 the history without `activity_type` returns 500. Drop that block at the first release that includes it. | #2 |
-| `apps/api/plane/tests/contract/app/test_issue_history_app.py` | Not in v1.4.3: upstream's regression test for that fix, added by the same cherry-pick. Drop it with the fix. | #2 |
+| `apps/api/plane/app/views/issue/activity.py` | Hides worklog activity from project guests in the issue history. | #2 |
+| `apps/api/migrations_lockfile.txt` | Lists the fork's app, `ext`, with its latest migration. `makemigrations` writes the file and upstream's check compares it with the migration graph. | v1.5.0 bump |
 | `apps/web/tsconfig.json` | The `@/plane-web/*` alias for the fork's frontend files in `apps/web/ce/`. | #2 |
-| `apps/web/core/components/issues/issue-detail/issue-activity/root.tsx` | The "Log time" button, and who can see worklogs and log time. | #2 |
-| `apps/web/core/components/issues/issue-detail/issue-activity/filter-root.tsx` | The worklog filter, shown only where worklogs can exist. The component becomes an observer. | #2 |
-| `apps/web/core/components/issues/issue-detail/issue-activity/activity-comment-root.tsx` | Renders worklog entries in the activity feed. | #2 |
-| `apps/web/core/components/issues/issue-detail/sidebar.tsx` | The "Time Tracking" property in the work item sidebar. | #2 |
-| `apps/web/core/components/issues/peek-overview/properties.tsx` | The same property in the peek overview. | #2 |
-| `apps/web/core/components/project/project-feature-update.tsx` | Uses the fork's features list, which adds the time tracking toggle. | #2 |
-| `apps/web/core/store/issue/issue-details/activity.store.ts` | Gives worklog activity its own activity type. | #2 |
+| `apps/web/components/issues/issue-detail/issue-activity/root.tsx` | The "Log time" button next to the activity tabs, who can see worklogs and log time, and worklog entries in the "Activity" tab. | #2, v1.5.0 bump |
+| `apps/web/components/issues/issue-detail/issue-activity/filter-root.tsx` | The worklog filter, shown only where worklogs can exist. The component becomes an observer. | #2 |
+| `apps/web/components/issues/issue-detail/issue-activity/activity-comment-root.tsx` | Renders worklog entries in the activity feed. | #2 |
+| `apps/web/components/issues/issue-detail/sidebar-sections.tsx` | The "Time Tracking" property of a work item. Upstream shares this component between the sidebar and the peek overview since v1.5.0; before, the fork changed `sidebar.tsx` and `peek-overview/properties.tsx`. | #2, v1.5.0 bump |
+| `apps/web/components/project/project-feature-update.tsx` | Uses the fork's features list, which adds the time tracking toggle. | #2 |
+| `apps/web/store/issue/issue-details/activity.store.ts` | Gives worklog activity its own activity type. | #2 |
 | `packages/constants/src/issue/filter.ts` | The `WORKLOG` activity filter, selected by default. | #2 |
 | `packages/types/src/project/projects.ts` | `is_time_tracking_enabled` in `IProject`. | #2 |
 | `apps/web/app/(all)/[workspaceSlug]/(projects)/star-us-link.tsx` | The GitHub link points to this repository instead of upstream's: the [source code offer](#source-code-offer). | #4 |
 | `packages/i18n/src/constants/namespaces.ts` | Registers `worklog`, the fork's i18n namespace. Its strings are in English and Spanish; other languages fall back to English. | #7 |
 | `packages/types/src/settings.ts` | `features_time_tracking`, the project settings tab for time tracking. | #7 |
 | `packages/constants/src/settings/project.ts` | That tab, under Features in the project settings. | #7 |
-| `apps/web/core/components/settings/project/sidebar/item-icon.tsx` | The icon of that tab. | #7 |
+| `apps/web/components/settings/project/sidebar/item-icon.tsx` | The icon of that tab. | #7 |
 | `apps/web/app/routes/core.ts` | The route of that tab's page. | #7 |
-| `.github/workflows/` | Removed: all of upstream's workflows. In v1.4.3 they are `build-branch`, `check-version`, `codeql`, `copyright-check`, `feature-deployment`, `i18n-sync-check`, `pull-request-build-lint-api`, `pull-request-build-lint-web-apps` and `react-doctor`. The fork's own `ci.yml` and `images.yml` are not upstream files. See [GitHub Actions](#github-actions). | #3 |
+| `.github/workflows/` | Removed: all of upstream's workflows. In v1.5.0 they are `build-branch`, `check-version`, `codeql`, `copyright-check`, `feature-deployment`, `i18n-sync-check`, `migration-check`, `pull-request-build-lint-api`, `pull-request-build-lint-web-apps` and `react-doctor`. The fork's own `ci.yml` and `images.yml` are not upstream files. See [GitHub Actions](#github-actions). | #3, v1.5.0 bump |
 
 Files that the fork adds are not upstream files and are not listed: this file, the
 `apps/api/plane/ext/` app, the fork's own frontend files (`apps/web/ce/`, the time tracking settings
@@ -216,7 +230,7 @@ version that runs on a network are offered its source code.
 
 ## GitHub Actions
 
-Upstream's workflows come with the code (9 of them in v1.4.3) and are written for upstream's branches,
+Upstream's workflows come with the code (10 of them in v1.5.0) and are written for upstream's branches,
 registries and infrastructure. None of them may run here:
 
 - **Removed from the work branch**, with their ledger entry. Check again on every version bump: a new
@@ -234,7 +248,7 @@ every action is pinned to a commit.
 
 | Workflow | Runs on | What it does |
 | --- | --- | --- |
-| `ci.yml` | Pull requests to `hobops/*` and pushes to them | `api`: ruff on the Python files the fork adds or changes, the migrations check, `migrate` on an empty database and the whole backend suite, with Postgres, Valkey and RabbitMQ as services. `web`: lint and format of `web` and its packages, types of the four apps and the production build of `web`. The ruleset requires both jobs. |
+| `ci.yml` | Pull requests to `hobops/*` and pushes to them | `api`: ruff on the Python files the fork adds or changes, the migrations check (models and lockfile), `migrate` on an empty database and the whole backend suite, with Postgres, Valkey and RabbitMQ as services. `web`: lint and format of `web` and its packages, types of the four apps and the production build of `web`. The ruleset requires both jobs. |
 | `images.yml` | Tags `v*-hobops.*`, or by hand | Builds the five images, `plane-backend`, `plane-frontend`, `plane-space`, `plane-admin` and `plane-live`, from the commit and pushes them to HobOps' private registry, `registry.hobops.io/hobops` (Harbor, with the `HARBOR_USERNAME` and `HARBOR_PASSWORD` repository secrets), all with the same tag and with the labels of the [source code offer](#source-code-offer). A tag publishes that release; a run by hand publishes `sha-<commit>`. |
 
 ## Conventions
