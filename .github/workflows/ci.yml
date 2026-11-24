@@ -60,6 +60,13 @@ jobs:
       # Every test shares one fixed API key, so the default 60/minute limit
       # turns a fast run into random 429s. No test relies on that limit.
       API_KEY_RATE_LIMIT: 10000/minute
+      # The attachment endpoints sign a download URL with these (tests new in
+      # v1.5.0); nothing is contacted.
+      AWS_S3_BUCKET_NAME: uploads
+      AWS_ACCESS_KEY_ID: ci-only
+      AWS_SECRET_ACCESS_KEY: ci-only-not-a-secret
+      AWS_REGION: us-east-1
+      AWS_S3_ENDPOINT_URL: http://localhost:9000
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
