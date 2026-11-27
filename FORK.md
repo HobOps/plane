@@ -37,18 +37,18 @@ repository are upstream's and describe upstream's product.
 
 | Ref | What it is |
 | --- | --- |
-| `hobops/v<upstream>`, today `hobops/v1.5.0` | The work branch for one upstream release: the upstream tag plus the fork's commits. The newest one is the default branch. |
-| `v<upstream>`, today `v1.5.0` | The upstream release tag, pushed here unchanged. It is the base of the work branch. |
+| `hobops/v<upstream>`, today `hobops/v1.5.1` | The work branch for one upstream release: the upstream tag plus the fork's commits. The newest one is the default branch. |
+| `v<upstream>`, today `v1.5.1` | The upstream release tag, pushed here unchanged. It is the base of the work branch. |
 | `v<upstream>-hobops.N`, first `v1.4.3-hobops.1` | A fork release, cut from the work branch. Container images carry the same tag. |
 
 The fork's whole diff is always one command away:
 
 ```sh
-git diff --stat v1.5.0..hobops/v1.5.0
-git log --oneline v1.5.0..hobops/v1.5.0
+git diff --stat v1.5.1..hobops/v1.5.1
+git log --oneline v1.5.1..hobops/v1.5.1
 ```
 
-It is also at <https://github.com/HobOps/plane/compare/v1.5.0...hobops/v1.5.0>.
+It is also at <https://github.com/HobOps/plane/compare/v1.5.1...hobops/v1.5.1>.
 
 ### Branch protection
 
@@ -96,7 +96,10 @@ git -c merge.renameLimit=20000 cherry-pick -x v1.5.0..origin/hobops/v1.5.0
    each fork commit survives as its own commit.
 5. Make `hobops/v1.5.1` the default branch and tag the release `v1.5.1-hobops.1`.
 
-This was first done in full for v1.5.0 (2026-11). What that move taught:
+This was first done in full for v1.5.0 (2026-11). A patch release is lighter: for v1.5.1 the fork's
+commits went over with `git rebase --onto v1.5.1 v1.5.0 bump/v1.5.1` (same result as the cherry-pick),
+and the only conflicts were upstream's workflows that the fork deletes (`git rm` them again).
+What the v1.5.0 move taught:
 
 - **Give git a high rename limit.** Upstream moved `apps/web/core/` up into `apps/web/`. With
   `merge.renameLimit` raised, the cherry-picks follow most of the moved files; the ones it loses show
